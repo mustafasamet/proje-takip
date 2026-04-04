@@ -244,7 +244,7 @@ async function dbLoadFirms(){
   }));
 }
 async function dbSaveFirm(f){
-  const {error} = await sb.from('firms').upsert({
+  const row={
     id:f.id,
     name:f.name,
     mods:f.mods||[],
@@ -254,10 +254,14 @@ async function dbSaveFirm(f){
     phone:f.phone||'',
     email:f.email||'',
     wh_enabled:f.whEnabled!==false,
-    started_at:f.startedAt||null,
     updated_at:new Date().toISOString()
-  },{onConflict:'id'});
-  if(error){console.error('firm kayıt hatası:',error.message,error.details);}
+  };
+  if(f.startedAt)row.started_at=f.startedAt;
+  const {data,error} = await sb.from('firms').upsert(row,{onConflict:'id'}).select();
+  if(error){
+    console.error('firm kayıt hatası:',JSON.stringify(error));
+    toast('⚠️ Kayıt hatası: '+error.message,'',true);
+  }
 }
 async function dbDeleteFirm(id){
   const {error} = await sb.from('firms').delete().eq('id',id);
