@@ -177,12 +177,21 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   <div class="mf">
     <div class="ml">🔗 n8n Webhook URL</div>
     <input class="mi" id="s-wh-url" placeholder="https://n8n.example.com/webhook/xxx" />
-    <div style="font-size:11px;color:var(--tx3);margin-top:6px;line-height:1.6">
+    <div style="font-size:11px;color:var(--tx3);margin-top:6px;line-height:1.8">
       3 event gelir: <code style="background:var(--d4);padding:1px 5px;border-radius:3px">project_created</code> · <code style="background:var(--d4);padding:1px 5px;border-radius:3px">task_completed</code> · <code style="background:var(--d4);padding:1px 5px;border-radius:3px">project_completed</code><br>
       Payload'da hazır <code style="background:var(--d4);padding:1px 5px;border-radius:3px">email_subject</code> ve <code style="background:var(--d4);padding:1px 5px;border-radius:3px">email_body</code> alanları gelir.
     </div>
+    <div id="wh-test-result" style="display:none;margin-top:8px;font-size:11px;padding:8px 10px;border-radius:8px"></div>
+    <div style="background:var(--d3);border:1px solid var(--bd2);border-radius:8px;padding:10px;margin-top:10px;font-size:11px;color:var(--tx3);line-height:1.7">
+      ⚠️ <strong style="color:var(--tx2)">n8n webhook-test URL kullanıyorsan:</strong><br>
+      n8n ekranında workflow açık ve <strong style="color:#f5a623">"Listen for test event"</strong> aktif olmalı. Üretim için <strong style="color:var(--gr)">/webhook/</strong> URL kullan, <strong style="color:var(--rd)">/webhook-test/</strong> değil.
+    </div>
   </div>
-  <div class="macts"><button class="btn bgh" onclick="closeM('m-settings')">İptal</button><button class="btn bgold" onclick="saveSettings()">Kaydet</button></div>
+  <div class="macts">
+    <button class="btn bgh" onclick="testWebhook()" style="margin-right:auto">🧪 Test Et</button>
+    <button class="btn bgh" onclick="closeM('m-settings')">İptal</button>
+    <button class="btn bgold" onclick="saveSettings()">Kaydet</button>
+  </div>
 </div></div>
 <div class="ov" id="m-edit">
 <div class="md" style="max-width:420px">
@@ -490,6 +499,30 @@ function addFirm(){
   toast(name+' oluşturuldu',(mods.map(m=>MM[m]?.l||m).join(' + ')||'Özel')+' modülleri yüklendi');
   setTimeout(()=>{const nf=gf(id);if(nf.wh?.url)sendWH(nf,null,'project_created');},300);
 }
+async function testWebhook(){
+  const url=document.getElementById('s-wh-url').value.trim();
+  const res=document.getElementById('wh-test-result');
+  if(!url){
+    res.style.display='block';res.style.background='var(--rdbg)';res.style.color='var(--rd)';
+    res.textContent='❌ Önce webhook URL girin';return;
+  }
+  res.style.display='block';res.style.background='var(--d3)';res.style.color='var(--tx2)';
+  res.textContent='⏳ Test gönderiliyor...';
+  const payload={
+    event:'test',firm_name:'TEST',customer_name:'Test Kullanıcı',customer_email:'test@test.com',
+    email_subject:'n8n Webhook Test — Ajans Paneli',
+    email_body:'Bu bir test mesajıdır. Webhook bağlantısı başarılı!',
+    sent_at:new Date().toISOString()
+  };
+  try{
+    await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+    res.style.background='var(--grbg)';res.style.color='var(--gr)';
+    res.textContent='✅ İstek gönderildi! n8n ekranında "Listen for test event" aktifse veri gelmiş olmalı.';
+  }catch(e){
+    res.style.background='var(--rdbg)';res.style.color='var(--rd)';
+    res.textContent='❌ Hata: '+e.message;
+  }
+}
 function openSettings(){
   document.getElementById('s-wh-url').value=settings.whUrl||'';
   document.getElementById('m-settings').classList.add('op');
@@ -568,7 +601,12 @@ async function sendWH(f,task,eventType){
   const whUrl=settings.whUrl||'';
   if(!whUrl)return;
   try{
-    await fetch(whUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+    const ctrl=new AbortController();
+    setTimeout(()=>ctrl.abort(),10000);
+    const res=await fetch(whUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal}).catch(async()=>{
+      // CORS hatası durumunda no-cors ile tekrar dene (n8n production URL için)
+      return await fetch(whUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+    });
     if(eventType==='project_created')toast('📧 Proje başlangıç maili gönderildi','');
     else if(eventType==='task_completed')toast('📧 Adım bildirimi gönderildi',task.n);
     else if(eventType==='project_completed')toast('📧 Proje tamamlama özeti gönderildi','');
