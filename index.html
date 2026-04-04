@@ -8,6 +8,19 @@
 :root{--gold:#B8843A;--gd:#8A6128;--gbg:rgba(184,132,58,.12);--dark:#1A1A18;--d2:#222220;--d3:#2A2A28;--d4:#343432;--tx:#E8E4DC;--tx2:#9A9690;--tx3:#5A5652;--bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.12);--gr:#4CAF7D;--grbg:rgba(76,175,125,.1);--bl:#6495ED;--blbg:rgba(100,149,237,.1);--rd:#E05555;--rdbg:rgba(224,85,85,.1);--pu:#A07DD0;--pubg:rgba(160,125,208,.1)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px}
+.formdata-btn{padding:5px 12px;border-radius:8px;border:1px solid var(--bd2);background:var(--d3);color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.formdata-btn:hover{color:var(--gold);border-color:rgba(184,132,58,.4)}
+.fd-wrap{padding:0 24px 20px}
+.fd-card{background:var(--d2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.fd-card-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--tx3);padding:12px 16px;border-bottom:1px solid var(--bd)}
+.fd-row{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.fd-item{padding:10px 16px;border-bottom:1px solid var(--bd)}
+.fd-item:nth-child(odd){border-right:1px solid var(--bd)}
+.fd-item.full{grid-column:1/-1}
+.fd-lbl{font-size:10px;color:var(--tx3);margin-bottom:3px;letter-spacing:.5px}
+.fd-val{font-size:13px;color:var(--tx);line-height:1.5;white-space:pre-wrap}
+.fd-empty{text-align:center;padding:40px;color:var(--tx3);font-size:13px}
+.fd-date{font-size:11px;color:var(--tx3);padding:10px 16px;border-top:1px solid var(--bd)}
 .loginpage{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px}
 .loginbox{background:var(--d2);border:1px solid var(--bd2);border-radius:20px;padding:40px 36px;width:100%;max-width:380px}
 .login-brand{text-align:center;margin-bottom:28px}
@@ -184,6 +197,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
         <div class="whtoggle"></div>
         <span class="whlbl" id="wh-lbl">Bildirim Kapalı</span>
       </div>
+      <button class="formdata-btn" id="btn-formdata" onclick="openFormData()" style="display:none">📋 Form Verileri</button>
       <button class="btn bgh bsm" onclick="copyLink()">🔗 Müşteri Linki</button>
       <button class="btn bgh bsm" onclick="resetF()">↺ Sıfırla</button>
     </div>
@@ -204,6 +218,19 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 </div>
 </div><!-- /mainapp -->
 <div class="toastwrap" id="tw"></div>
+<div class="ov" id="m-formdata">
+<div class="md" style="max-width:640px;padding:0;overflow:hidden">
+  <div style="padding:20px 24px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:16px;font-weight:700" id="fd-title">Form Verileri</div>
+      <div style="font-size:12px;color:var(--tx3);margin-top:2px" id="fd-subtitle"></div>
+    </div>
+    <button class="btn bgh bsm" onclick="closeM('m-formdata')">✕ Kapat</button>
+  </div>
+  <div id="fd-content" style="max-height:70vh;overflow-y:auto;padding:16px 24px 24px"></div>
+</div>
+</div>
+
 <div class="ov" id="m-add">
 <div class="md">
   <div class="mdtit">Yeni Firma Ekle</div>
@@ -304,6 +331,16 @@ async function dbSaveFirm(f){
 async function dbDeleteFirm(id){
   const {error} = await sb.from('firms').delete().eq('id',id);
   if(error)console.error('firm silme hatası:',error);
+}
+async function dbLoadFormData(brandName){
+  // brand adına göre en son form verisini getir
+  const {data,error} = await sb.from('form_submissions')
+    .select('*')
+    .ilike('brand', '%'+brandName+'%')
+    .order('submitted_at',{ascending:false})
+    .limit(1);
+  if(error){console.error('form data hatası:',error);return null;}
+  return data && data.length ? data[0] : null;
 }
 async function dbLoadSettings(){
   const {data,error} = await sb.from('app_settings').select('*').eq('id','global').single();
@@ -495,6 +532,7 @@ function selF(id){
   document.getElementById('stats').style.display='grid';document.getElementById('pw').style.display='block';
   renderInfoCards(f);
   updateWHToggle(f);
+  document.getElementById('btn-formdata').style.display='flex';
   renderMT(f);renderSt(f);renderGs(f);
 }
 function renderInfoCards(f){
@@ -615,6 +653,58 @@ async function addFirm(){
   await sv(newF2);closeM('m-add');renderSB();selF(id);
   toast(name+' oluşturuldu',(mods.map(m=>MM[m]?.l||m).join(' + ')||'Özel')+' modülleri yüklendi');
   setTimeout(()=>{const nf=gf(id);if(settings.whUrl)sendWH(nf,null,'project_created');},300);
+}
+async function openFormData(){
+  const f=gf(aid);if(!f)return;
+  document.getElementById('fd-title').textContent=f.name+' — Müşteri Form Bilgileri';
+  document.getElementById('fd-subtitle').textContent='Sametsalik.com reklam detay formu';
+  document.getElementById('fd-content').innerHTML='<div class="fd-empty">⏳ Yükleniyor...</div>';
+  document.getElementById('m-formdata').classList.add('op');
+  const fd = await dbLoadFormData(f.name);
+  renderFormData(fd);
+}
+function renderFormData(fd){
+  const el=document.getElementById('fd-content');
+  if(!fd){
+    el.innerHTML='<div class="fd-empty">📭 Bu firma için henüz form verisi yok.<br><span style="font-size:11px;margin-top:6px;display:block">Müşteri formu doldurunca burada görünür.</span></div>';
+    return;
+  }
+  const d=fd.data||{};
+  const date=fd.submitted_at?new Date(fd.submitted_at).toLocaleString('tr-TR'):'';
+  const sec=(lbl,fields)=>{
+    const rows=fields.filter(f=>d[f.k]).map((f,i)=>`<div class="fd-item${f.full?' full':''}"><div class="fd-lbl">${f.l}</div><div class="fd-val">${d[f.k]||'—'}</div></div>`).join('');
+    if(!rows)return '';
+    return `<div class="fd-card"><div class="fd-card-title">${lbl}</div><div class="fd-row">${rows}</div></div>`;
+  };
+  el.innerHTML=
+    sec('Temel Bilgiler',[
+      {k:'name',l:'Ad Soyad'},{k:'brand',l:'Marka'},{k:'email',l:'E-posta'},{k:'phone',l:'Telefon'},
+      {k:'sector',l:'Sektör'},{k:'website',l:'Web Sitesi',full:true},{k:'adphone',l:'Reklam Telefonu',full:true}
+    ])+
+    sec('Reklam Platformları',[
+      {k:'meta',l:'Meta Ads'},{k:'google',l:'Google Ads'},
+      {k:'fb_page',l:'Facebook Sayfa'},{k:'instagram',l:'Instagram'},
+      {k:'ga',l:'Google Analytics'},{k:'ym',l:'Yandex Metrica'}
+    ])+
+    sec('Panel Erişimi',[
+      {k:'admin_url',l:'Admin URL',full:true},{k:'admin_user',l:'Kullanıcı Adı'},{k:'admin_pass',l:'Şifre'}
+    ])+
+    sec('Strateji',[
+      {k:'summary',l:'İşletme Özeti',full:true},{k:'products',l:'Öncelikli Ürünler',full:true},
+      {k:'regions',l:'Hedef Bölgeler',full:true},{k:'copy',l:'Reklam İbareleri',full:true},
+      {k:'diff',l:'Rakiplerden Fark',full:true},{k:'free_value',l:'Ücretsiz Değer',full:true},
+      {k:'certificates',l:'Sertifikalar'},{k:'experience',l:'Tecrübe'}
+    ])+
+    sec('Rakip & Kitle',[
+      {k:'competitors',l:'Rakipler',full:true},{k:'demographics',l:'Demografik',full:true},
+      {k:'channel',l:'İletişim Kanalı'},{k:'seasonality',l:'Sezonsal Dönemler',full:true}
+    ])+
+    sec('Bütçe',[
+      {k:'budget',l:'Bütçe Tercihi',full:true},{k:'budget_note',l:'Bütçe Notu',full:true},
+      {k:'avg_revenue',l:'Ortalama Gelir'},{k:'prev_ads',l:'Önceki Reklam'},
+      {k:'prev_result',l:'Önceki Sonuç',full:true},{k:'note',l:'Diğer Notlar',full:true}
+    ])+
+    (date?`<div class="fd-date">📅 Form gönderim tarihi: ${date}</div>`:'');
 }
 async function testWebhook(){
   const url=document.getElementById('s-wh-url').value.trim();
