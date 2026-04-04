@@ -169,7 +169,16 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   <div class="mf"><div class="ml">Müşteri Adı</div><input class="mi" id="wh-name" placeholder="Ahmet Bey" /></div>
   <div class="macts"><button class="btn bgh" onclick="closeM('m-wh')">İptal</button><button class="btn bgold" onclick="saveWH()">Kaydet</button></div>
 </div></div>
-<div class="ov" id="m-ct">
+<div class="ov" id="m-edit">
+<div class="md" style="max-width:420px">
+  <div class="mdtit">İletişim Bilgilerini Düzenle</div>
+  <div class="mdsub" id="edit-firm-name"></div>
+  <div class="mf"><div class="ml">Firma Adı</div><input class="mi" id="edit-name" placeholder="Firma adı" /></div>
+  <div class="mf"><div class="ml">Yetkili İsim Soyisim</div><input class="mi" id="edit-contact" placeholder="Ahmet Yılmaz" /></div>
+  <div class="mf"><div class="ml">Telefon</div><input class="mi" id="edit-phone" placeholder="0532 000 00 00" /></div>
+  <div class="mf"><div class="ml">E-posta</div><input class="mi" id="edit-email" placeholder="ahmet@firma.com" /></div>
+  <div class="macts"><button class="btn bgh" onclick="closeM('m-edit')">İptal</button><button class="btn bgold" onclick="saveEdit()">Kaydet</button></div>
+</div></div>
 <div class="md" style="max-width:420px">
   <div class="mdtit">Özel Görev Ekle</div>
   <div class="mdsub" id="ct-lbl"></div>
@@ -352,9 +361,14 @@ function renderInfoCards(f){
   if(f.contact)items.push({ico:'👤',lbl:'Yetkili',val:f.contact});
   if(f.phone)items.push({ico:'📞',lbl:'Telefon',val:f.phone});
   if(f.email)items.push({ico:'✉️',lbl:'E-posta',val:f.email});
-  if(!items.length){el.style.display='none';return;}
+  if(!items.length){
+    el.style.display='flex';
+    el.innerHTML='<button class="btn bgh bsm" onclick="openEdit()">✏️ İletişim Bilgisi Ekle</button>';
+    return;
+  }
   el.style.display='flex';
-  el.innerHTML=items.map((it,i)=>`<div class="icard" onclick="copyInfo(this,'${it.val.replace(/'/g,"\\'")}')"><div><div class="icard-lbl">${it.ico} ${it.lbl}</div><div class="icard-val">${it.val}</div></div><span class="icard-ico">📋</span></div>`).join('');
+  el.innerHTML=items.map((it,i)=>`<div class="icard" onclick="copyInfo(this,'${it.val.replace(/'/g,"\\'")}')"><div><div class="icard-lbl">${it.ico} ${it.lbl}</div><div class="icard-val">${it.val}</div></div><span class="icard-ico">📋</span></div>`).join('')
+    +'<button class="btn bgh bsm" style="margin-left:4px;align-self:center" onclick="openEdit()">✏️ Düzenle</button>';
 }
 function copyInfo(el,val){
   navigator.clipboard.writeText(val).catch(()=>{});
@@ -446,6 +460,30 @@ function addFirm(){
 function openWH(){const f=gf(aid);if(!f)return;document.getElementById('wh-url').value=f.wh?.url||'';document.getElementById('wh-email').value=f.wh?.email||'';document.getElementById('wh-name').value=f.wh?.name||'';document.getElementById('m-wh').classList.add('op');}
 function saveWH(){const f=gf(aid);f.wh={url:document.getElementById('wh-url').value.trim(),email:document.getElementById('wh-email').value.trim(),name:document.getElementById('wh-name').value.trim()};sv();closeM('m-wh');document.getElementById('nb').style.display=f.wh.url?'flex':'none';toast('Webhook kaydedildi','');}
 async function sendWH(f,task){const p=getProg(f);try{await fetch(f.wh.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'task_completed',firm:f.name,customer_email:f.wh.email,customer_name:f.wh.name,task_name:task.n,task_tags:task.tg,progress_pct:p.pct,completed_at:new Date().toISOString()}),mode:'no-cors'});toast('Bildirim gönderildi',task.n);}catch(e){toast('Webhook hatası','',true);}}
+function openEdit(){
+  const f=gf(aid);if(!f)return;
+  document.getElementById('edit-firm-name').textContent=f.name+' — İletişim Bilgileri';
+  document.getElementById('edit-name').value=f.name||'';
+  document.getElementById('edit-contact').value=f.contact||'';
+  document.getElementById('edit-phone').value=f.phone||'';
+  document.getElementById('edit-email').value=f.email||'';
+  document.getElementById('m-edit').classList.add('op');
+  setTimeout(()=>document.getElementById('edit-name').focus(),100);
+}
+function saveEdit(){
+  const f=gf(aid);if(!f)return;
+  const newName=document.getElementById('edit-name').value.trim();
+  if(!newName){toast('Firma adı boş olamaz','',true);return;}
+  f.name=newName;
+  f.contact=document.getElementById('edit-contact').value.trim();
+  f.phone=document.getElementById('edit-phone').value.trim();
+  f.email=document.getElementById('edit-email').value.trim();
+  sv();closeM('m-edit');
+  document.getElementById('pt').textContent=f.name;
+  renderInfoCards(f);
+  renderSB();
+  toast('Bilgiler güncellendi','');
+}
 function delFirm(id){
   const f=gf(id);if(!f)return;
   if(!confirm('"'+f.name+'" firmasını ve tüm görev verilerini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.'))return;
