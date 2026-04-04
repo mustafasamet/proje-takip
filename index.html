@@ -136,7 +136,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
     <div class="sc"><div class="slbl">Kalan</div><div class="sval" id="sl">—</div><div class="ssub" id="scr">—</div></div>
   </div>
   <div id="pw" class="pw" style="display:none"><div class="pf" id="pf" style="width:0%"></div></div>
-  <div id="nb" class="nbanner" style="display:none"><span>🔗</span><div><strong>n8n aktif</strong> — Görev tamamlandığında müşteriye bildirim gider.</div><button class="btn bgh bsm" onclick="openWH()" style="margin-left:auto">Düzenle</button></div>
+  <div id="nb" class="nbanner" style="display:none"><span>🔗</span><div><strong>n8n aktif</strong> — Proje başlangıcı, her adım ve proje tamamlanmasında müşteriye otomatik mail gider.</div><button class="btn bgh bsm" onclick="openWH()" style="margin-left:auto">Düzenle</button></div>
   <div class="mtabs" id="mtabs" style="display:none"></div>
   <div class="gw" id="gw"><div class="empty"><div class="eico">🏗</div><div class="etit">Firma seçilmedi</div><div>Sol panelden seçin veya yeni ekleyin</div></div></div>
 </div>
@@ -163,7 +163,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 <div class="ov" id="m-wh">
 <div class="md" style="max-width:420px">
   <div class="mdtit">n8n Webhook</div>
-  <div class="mdsub">Görev tamamlandığında JSON payload gönderilir. n8n üzerinden müşteriye e-posta kurulumu yapabilirsiniz.</div>
+  <div class="mdsub">3 ayrı mail gönderilir: (1) Proje oluşturulduğunda hoş geldin, (2) Her adım tamamlandığında bildirim, (3) Proje bittiğinde çalışma özeti. Payload içinde hazır <strong>email_subject</strong> ve <strong>email_body</strong> alanları gelir — n8n'de Gmail/SMTP node'a direkt bağlayın.</div>
   <div class="mf"><div class="ml">Webhook URL</div><input class="mi" id="wh-url" placeholder="https://n8n.example.com/webhook/xxx" /></div>
   <div class="mf"><div class="ml">Müşteri E-posta</div><input class="mi" id="wh-email" placeholder="musteri@firma.com" /></div>
   <div class="mf"><div class="ml">Müşteri Adı</div><input class="mi" id="wh-name" placeholder="Ahmet Bey" /></div>
@@ -421,8 +421,23 @@ function tH(t,f){
 function togG(id){document.getElementById('tl'+id)?.classList.toggle('op');document.getElementById('gcv'+id)?.classList.toggle('op');}
 async function togT(tid){
   if(ism){toast('Sadece görüntüleme','');return;}
-  const f=gf(aid);const was=!!f.tasks[tid];f.tasks[tid]=!was;sv();renderSt(f);renderGs(f);renderSB();
-  if(!was&&f.wh?.url){const task=getGs(f).flatMap(g=>g.ts).find(t=>t.id===tid);if(task)await sendWH(f,task);}
+  const f=gf(aid);const was=!!f.tasks[tid];
+  // İlk görev tamamlandığında başlangıç zamanı kaydet
+  if(!was&&!f.startedAt){f.startedAt=new Date().toISOString();}
+  f.tasks[tid]=!was;sv();renderSt(f);renderGs(f);renderSB();
+  if(!was&&f.wh?.url){
+    const task=getGs(f).flatMap(g=>g.ts).find(t=>t.id===tid);
+    if(task){
+      const p=getProg(f);
+      if(p.done===p.total&&p.total>0){
+        // Tüm görevler tamamlandı — proje tamamlama maili
+        await sendWH(f,task,'project_completed');
+      } else {
+        // Normal adım bildirimi
+        await sendWH(f,task,'task_completed');
+      }
+    }
+  }
 }
 function openCT(gid,gti){pgid=gid;pgti=gti;document.getElementById('ct-lbl').textContent='"'+gti+'" grubuna özel görev ekle';document.getElementById('ct-n').value='';document.getElementById('ct-nt').value='';document.getElementById('m-ct').classList.add('op');setTimeout(()=>document.getElementById('ct-n').focus(),100);}
 function saveCT(){
@@ -456,10 +471,67 @@ function addFirm(){
     created:new Date().toISOString()});
   sv();closeM('m-add');renderSB();selF(id);
   toast(name+' oluşturuldu',(mods.map(m=>MM[m]?.l||m).join(' + ')||'Özel')+' modülleri yüklendi');
+  setTimeout(()=>{const nf=gf(id);if(nf.wh?.url)sendWH(nf,null,'project_created');},300);
 }
 function openWH(){const f=gf(aid);if(!f)return;document.getElementById('wh-url').value=f.wh?.url||'';document.getElementById('wh-email').value=f.wh?.email||'';document.getElementById('wh-name').value=f.wh?.name||'';document.getElementById('m-wh').classList.add('op');}
 function saveWH(){const f=gf(aid);f.wh={url:document.getElementById('wh-url').value.trim(),email:document.getElementById('wh-email').value.trim(),name:document.getElementById('wh-name').value.trim()};sv();closeM('m-wh');document.getElementById('nb').style.display=f.wh.url?'flex':'none';toast('Webhook kaydedildi','');}
-async function sendWH(f,task){const p=getProg(f);try{await fetch(f.wh.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'task_completed',firm:f.name,customer_email:f.wh.email,customer_name:f.wh.name,task_name:task.n,task_tags:task.tg,progress_pct:p.pct,completed_at:new Date().toISOString()}),mode:'no-cors'});toast('Bildirim gönderildi',task.n);}catch(e){toast('Webhook hatası','',true);}}
+async function sendWH(f,task,eventType){
+  const p=getProg(f);
+  const mods=(f.mods||[]).map(m=>MM[m]?.l||m).join(' + ');
+  const now=new Date().toISOString();
+  // Süre hesapla
+  const startMs=f.startedAt?new Date(f.startedAt).getTime():new Date(f.created).getTime();
+  const totalHours=Math.round((Date.now()-startMs)/1000/3600*10)/10;
+  let payload={};
+  if(eventType==='project_created'){
+    payload={
+      event:'project_created',
+      firm_name:f.name,
+      customer_name:f.wh.name||f.contact||'',
+      customer_email:f.wh.email||f.email||'',
+      modules:mods,
+      total_tasks:p.total,
+      created_at:now,
+      // E-posta şablonu için hazır alanlar
+      email_subject:f.name+' Projeniz Başladı',
+      email_body:'Merhaba '+( f.wh.name||f.contact||'Sayın Müşterimiz')+',\n\n'+f.name+' için '+mods+' kurulum projeniz başlatıldı.\nToplam '+p.total+' adım tamamlanacak.\nProje ilerlemenizi sizinle paylaşmaya devam edeceğiz.\n\nİyi çalışmalar!'
+    };
+  } else if(eventType==='task_completed'){
+    payload={
+      event:'task_completed',
+      firm_name:f.name,
+      customer_name:f.wh.name||f.contact||'',
+      customer_email:f.wh.email||f.email||'',
+      task_name:task.n,
+      task_tags:task.tg,
+      progress_done:p.done,
+      progress_total:p.total,
+      progress_pct:p.pct,
+      completed_at:now,
+      email_subject:f.name+' — Adım Tamamlandı (%'+p.pct+')',
+      email_body:'Merhaba '+(f.wh.name||f.contact||'Sayın Müşterimiz')+',\n\n✅ "'+task.n+'" adımı tamamlandı.\n\nGenel İlerleme: '+p.done+'/'+p.total+' adım (%'+p.pct+')\n\nÇalışmalarımız devam ediyor, sizi bilgilendirmeye devam edeceğiz.'
+    };
+  } else if(eventType==='project_completed'){
+    payload={
+      event:'project_completed',
+      firm_name:f.name,
+      customer_name:f.wh.name||f.contact||'',
+      customer_email:f.wh.email||f.email||'',
+      total_tasks:p.total,
+      total_hours:totalHours,
+      modules:mods,
+      completed_at:now,
+      email_subject:'🎉 '+f.name+' Projeniz Tamamlandı!',
+      email_body:'Merhaba '+(f.wh.name||f.contact||'Sayın Müşterimiz')+',\n\n🎉 '+f.name+' için '+mods+' kurulum projesi başarıyla tamamlandı!\n\n📋 Özet:\n• Tamamlanan Adım: '+p.total+' / '+p.total+'\n• Toplam Çalışma: ~'+totalHours+' saat\n• Modüller: '+mods+'\n\nHer şey için teşekkür ederiz!'
+    };
+  }
+  try{
+    await fetch(f.wh.url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+    if(eventType==='project_created')toast('📧 Proje başlangıç maili gönderildi','');
+    else if(eventType==='task_completed')toast('📧 Adım bildirimi gönderildi',task.n);
+    else if(eventType==='project_completed')toast('📧 Proje tamamlama özeti gönderildi','');
+  }catch(e){toast('Webhook hatası','',true);}
+}
 function openEdit(){
   const f=gf(aid);if(!f)return;
   document.getElementById('edit-firm-name').textContent=f.name+' — İletişim Bilgileri';
