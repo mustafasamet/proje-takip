@@ -449,7 +449,7 @@ async function togT(tid){
   // İlk görev tamamlandığında başlangıç zamanı kaydet
   if(!was&&!f.startedAt){f.startedAt=new Date().toISOString();}
   f.tasks[tid]=!was;sv();renderSt(f);renderGs(f);renderSB();
-  if(!was&&f.wh?.url){
+  if(!was&&settings.whUrl){
     const task=getGs(f).flatMap(g=>g.ts).find(t=>t.id===tid);
     if(task){
       const p=getProg(f);
@@ -495,7 +495,7 @@ function addFirm(){
     created:new Date().toISOString()});
   sv();closeM('m-add');renderSB();selF(id);
   toast(name+' oluşturuldu',(mods.map(m=>MM[m]?.l||m).join(' + ')||'Özel')+' modülleri yüklendi');
-  setTimeout(()=>{const nf=gf(id);if(nf.wh?.url)sendWH(nf,null,'project_created');},300);
+  setTimeout(()=>{const nf=gf(id);if(settings.whUrl)sendWH(nf,null,'project_created');},300);
 }
 async function testWebhook(){
   const url=document.getElementById('s-wh-url').value.trim();
