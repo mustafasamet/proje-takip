@@ -331,13 +331,22 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   </div>
 </div></div>
 <div class="ov" id="m-edit">
-<div class="md" style="max-width:420px">
-  <div class="mdtit">İletişim Bilgilerini Düzenle</div>
+<div class="md" style="max-width:480px">
+  <div class="mdtit">Firma Düzenle</div>
   <div class="mdsub" id="edit-firm-name"></div>
   <div class="mf"><div class="ml">Firma Adı</div><input class="mi" id="edit-name" placeholder="Firma adı" /></div>
   <div class="mf"><div class="ml">Yetkili İsim Soyisim</div><input class="mi" id="edit-contact" placeholder="Ahmet Yılmaz" /></div>
   <div class="mf"><div class="ml">Telefon</div><input class="mi" id="edit-phone" placeholder="0532 000 00 00" /></div>
   <div class="mf"><div class="ml">E-posta</div><input class="mi" id="edit-email" placeholder="ahmet@firma.com" /></div>
+  <div class="mf">
+    <div class="ml">Hizmet Modülleri</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Modül ekleyip çıkarabilirsiniz — mevcut görevler silinmez</div>
+    <div class="mgrid" style="grid-template-columns:1fr 1fr">
+      <div class="mc" id="emc-sh" onclick="togEditMod('sh')"><div class="mcic">🛍</div><div><div class="mctit">Shopify</div><div class="mcsub">E-ticaret kurulumu</div></div><div class="mcck" id="emck-sh"></div></div>
+      <div class="mc" id="emc-mt" onclick="togEditMod('mt')"><div class="mcic">📘</div><div><div class="mctit">Meta Ads</div><div class="mcsub">Facebook & Instagram</div></div><div class="mcck" id="emck-mt"></div></div>
+      <div class="mc" id="emc-gg" onclick="togEditMod('gg')"><div class="mcic">🔍</div><div><div class="mctit">Google Ads</div><div class="mcsub">Arama & Shopping</div></div><div class="mcck" id="emck-gg"></div></div>
+    </div>
+  </div>
   <div class="macts"><button class="btn bgh" onclick="closeM('m-edit')">İptal</button><button class="btn bgold" onclick="saveEdit()">Kaydet</button></div>
 </div></div>
 <div class="ov" id="m-ct">
@@ -1158,13 +1167,40 @@ function updateWHToggle(f){
   sw.classList.toggle('on', on);
   lbl.textContent = on ? 'Bildirim Açık' : 'Bildirim Kapalı';
 }
+function togEditMod(m){
+  const card=document.getElementById('emc-'+m);
+  const chk=document.getElementById('emck-'+m);
+  const active=card.dataset.active==='1';
+  if(active){
+    card.dataset.active='0';
+    card.className='mc';
+    chk.innerHTML='';chk.style.cssText='';
+  } else {
+    card.dataset.active='1';
+    const cls={sh:'s-sh',mt:'s-mt',gg:'s-gg'}[m];
+    card.className='mc '+cls;
+    chk.innerHTML='<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    chk.style.cssText='background:var(--gold);border-color:var(--gold)';
+  }
+}
 function openEdit(){
   const f=gf(aid);if(!f)return;
-  document.getElementById('edit-firm-name').textContent=f.name+' — İletişim Bilgileri';
+  document.getElementById('edit-firm-name').textContent=f.name;
   document.getElementById('edit-name').value=f.name||'';
   document.getElementById('edit-contact').value=f.contact||'';
   document.getElementById('edit-phone').value=f.phone||'';
   document.getElementById('edit-email').value=f.email||'';
+  // Modülleri yükle
+  ['sh','mt','gg'].forEach(m=>{
+    const active=(f.mods||[]).includes(m);
+    const card=document.getElementById('emc-'+m);
+    const chk=document.getElementById('emck-'+m);
+    card.dataset.active=active?'1':'0';
+    const cls={sh:'s-sh',mt:'s-mt',gg:'s-gg'}[m];
+    card.className='mc'+(active?' '+cls:'');
+    chk.innerHTML=active?'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
+    chk.style.cssText=active?'background:var(--gold);border-color:var(--gold)':'';
+  });
   document.getElementById('m-edit').classList.add('op');
   setTimeout(()=>document.getElementById('edit-name').focus(),100);
 }
@@ -1176,11 +1212,23 @@ async function saveEdit(){
   f.contact=document.getElementById('edit-contact').value.trim();
   f.phone=document.getElementById('edit-phone').value.trim();
   f.email=document.getElementById('edit-email').value.trim();
+  // Seçili modülleri güncelle
+  const newMods=['sh','mt','gg'].filter(m=>document.getElementById('emc-'+m).dataset.active==='1');
+  const oldMods=f.mods||[];
+  f.mods=newMods;
   await sv(f);closeM('m-edit');
   document.getElementById('pt').textContent=f.name;
+  document.getElementById('ps').textContent=(f.mods||[]).map(m=>MM[m]?.l||m).join(' + ')||'Özel Proje';
   renderInfoCards(f);
   renderSB();
-  toast('Bilgiler güncellendi','');
+  // Modüller değiştiyse tab ve görevleri yenile
+  renderMT(f);renderGs(f);renderSt(f);
+  const added=newMods.filter(m=>!oldMods.includes(m));
+  const removed=oldMods.filter(m=>!newMods.includes(m));
+  let msg='Bilgiler güncellendi';
+  if(added.length) msg+=' · '+added.map(m=>MM[m]?.l||m).join(', ')+' eklendi';
+  if(removed.length) msg+=' · '+removed.map(m=>MM[m]?.l||m).join(', ')+' çıkarıldı';
+  toast(msg,'');
 }
 async function delFirm(id){
   const f=gf(id);if(!f)return;
