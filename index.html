@@ -683,7 +683,11 @@ function renderGs(f){
   const w=document.getElementById('gw');w.innerHTML='';
   let gs=getGs(f);
   if(fm!=='all'){if(fm==='oz')gs=gs.filter(g=>g.isC);else gs=gs.filter(g=>T[fm]?.some(x=>x.id===g.id));}
-  if(!gs.length){w.innerHTML='<div class="empty"><div class="eico">✅</div><div class="etit">Bu modülde görev yok</div></div>';return;}
+  if(!gs.length){
+    const addCustomBtn = !ism ? `<button class="btn bgold bsm" style="margin-top:12px" onclick="openCT('ozel-genel','Özel Görevler')">+ Özel Görev Ekle</button>` : '';
+    w.innerHTML=`<div class="empty"><div class="eico">📋</div><div class="etit">Henüz görev yok</div><div>Şablon seçilmedi veya tüm görevler tamamlandı</div>${addCustomBtn}</div>`;
+    return;
+  }
   gs.forEach(grp=>{
     let tasks=grp.ts;if(ftg!=='hepsi')tasks=tasks.filter(t=>t.tg.includes(ftg));if(!tasks.length)return;
     const done=tasks.filter(t=>f.tasks[t.id]).length;const pct=Math.round(done/tasks.length*100);
