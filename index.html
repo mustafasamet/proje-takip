@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proje Takip — Ajans Paneli</title>
+<style>
+  :root {
+    --gold: #B8843A;
+    --gold-light: #F5ECD9;
+    --gold-dark: #8A6128;
+    --dark: #1A1A18;
+    --dark2: #242422;
+    --dark3: #2E2E2C;
+    --dark4: #3A3A38;
+    --text: #E8E4DC;
+    --text2: #9A9690;
+    --text3: #5A5652;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --success: #4CAF7D;
+    --success-bg: rgba(76,175,125,0.12);
+    --warning: #E8A020;
+    --radius: 10px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* SIDEBAR */
+  .layout { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px;
+    background: var(--dark2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-brand {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .brand-logo {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .brand-sub {
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .sidebar-section {
+    padding: 16px 12px 8px;
+  }
+
+  .sidebar-section-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+
+  .firm-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border-radius: var(--radius);
+    border: none;
+    background: transparent;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all .15s;
+    text-align: left;
+    font-size: 13px;
+    position: relative;
+  }
+
+  .firm-btn:hover { background: var(--dark3); color: var(--text); }
+  .firm-btn.active { background: rgba(184,132,58,0.15); color: var(--gold); }
+  .firm-btn.active .firm-initial { background: var(--gold); color: #fff; }
+
+  .firm-initial {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--dark4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+    flex-shrink: 0;
+    color: var(--text2);
+    transition: all .15s;
+  }
+
+  .firm-info { flex: 1; min-width: 0; }
+  .firm-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .firm-prog { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+  .firm-pct {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    flex-shrink: 0;
+  }
+  .firm-btn.active .firm-pct { color: var(--gold); }
+
+  .add-firm-btn {
+    width: calc(100% - 24px);
+    margin: 4px 12px 12px;
+    padding: 8px;
+    border-radius: var(--radius);
+    border: 1px dashed var(--border2);
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all .15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .add-firm-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(184,132,58,0.06); }
+
+  /* MAIN */
+  .main { flex: 1; overflow-y: auto; }
+
+  .topbar {
+    padding: 20px 28px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .page-title { font-size: 22px; font-weight: 700; color: var(--text); }
+  .page-sub { font-size: 13px; color: var(--text3); margin-top: 3px; }
+
+  .topbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+
+  .btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+
+  .btn-primary { background: var(--gold); color: #fff; }
+  .btn-primary:hover { background: var(--gold-dark); }
+  .btn-ghost { background: var(--dark3); color: var(--text2); border: 1px solid var(--border2); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--border2); background: var(--dark4); }
+
+  /* STATS */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 20px 28px;
+  }
+
+  .stat-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 8px; }
+  .stat-val { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+  .stat-val.gold { color: var(--gold); }
+  .stat-val.green { color: var(--success); }
+
+  /* PROGRESS BAR */
+  .prog-bar-wrap {
+    margin: 0 28px 20px;
+    background: var(--dark3);
+    border-radius: 99px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .prog-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
+    border-radius: 99px;
+    transition: width .5s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* FILTER BAR */
+  .filter-bar {
+    padding: 0 28px 16px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-chip {
+    padding: 5px 13px;
+    border-radius: 99px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text3);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .filter-chip:hover { color: var(--text2); border-color: var(--border2); }
+  .filter-chip.on { background: rgba(184,132,58,0.15); color: var(--gold); border-color: rgba(184,132,58,0.3); }
+
+  .filter-sep { flex: 1; }
+
+  .webhook-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text3);
+  }
+  .ws-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
+  .ws-dot.active { background: var(--success); box-shadow: 0 0 6px var(--success); }
+
+  /* TASK GROUPS */
+  .groups-wrap { padding: 0 28px 40px; }
+
+  .group {
+    margin-bottom: 12px;
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+    transition: background .1s;
+  }
+  .group-header:hover { background: var(--dark3); }
+
+  .group-day {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .group-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+  .group-meta { font-size: 11px; color: var(--text3); }
+  .group-chevron { font-size: 10px; color: var(--text3); transition: transform .2s; margin-left: 4px; }
+  .group-chevron.open { transform: rotate(90deg); }
+
+  .group-prog {
+    height: 3px;
+    background: var(--dark4);
+  }
+  .group-prog-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width .4s;
+  }
+
+  .tasks-list { display: none; }
+  .tasks-list.open { display: block; }
+
+  .task-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 18px;
+    border-top: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .1s;
+  }
+  .task-row:hover { background: rgba(255,255,255,0.02); }
+  .task-row.done .task-name { text-decoration: line-through; color: var(--text3); }
+
+  .checkbox {
+    width: 18px; height: 18px;
+    border-radius: 5px;
+    border: 1.5px solid var(--dark4);
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .15s;
+    background: var(--dark3);
+  }
+  .checkbox.checked { background: var(--success); border-color: var(--success); }
+  .checkbox svg { display: none; }
+  .checkbox.checked svg { display: block; }
+
+  .task-body { flex: 1; min-width: 0; }
+  .task-name { font-size: 13px; color: var(--text); line-height: 1.4; }
+  .task-note { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4; }
+
+  .task-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .tag-shopify { background: rgba(149,191,71,0.12); color: #95BF47; }
+  .tag-tasarim { background: rgba(184,132,58,0.15); color: var(--gold); }
+  .tag-icerik { background: rgba(76,175,125,0.12); color: var(--success); }
+  .tag-teknik { background: rgba(100,149,237,0.12); color: #6495ED; }
+  .tag-kritik { background: rgba(220,80,80,0.12); color: #DC5050; }
+  .tag-test { background: rgba(180,130,220,0.12); color: #B482DC; }
+
+  .task-right {
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .notif-indicator {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0;
+    transition: opacity .3s;
+  }
+  .notif-indicator.sent { background: var(--success); opacity: 1; }
+
+  /* WEBHOOK MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--dark2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    width: 480px;
+    max-width: calc(100vw - 32px);
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .modal-sub { font-size: 12px; color: var(--text3); margin-bottom: 20px; line-height: 1.5; }
+  .modal-field { margin-bottom: 14px; }
+  .modal-label { font-size: 11px; color: var(--text3); margin-bottom: 5px; letter-spacing: .5px; }
+  .modal-input {
+    width: 100%;
+    padding: 9px 12px;
+    background: var(--dark3);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border .15s;
+  }
+  .modal-input:focus { border-color: var(--gold); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+  /* ADD FIRM MODAL */
+  .firm-modal { width: 400px; }
+
+  /* TOAST */
+  .toast-wrap {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    z-index: 200;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    background: var(--dark2);
+    border: 1px solid var(--border2);
+    border-left: 3px solid var(--success);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: var(--text2);
+    max-width: 300px;
+    animation: toastIn .3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+  .toast.error { border-left-color: #DC5050; }
+  .toast-title { font-weight: 600; color: var(--text); margin-bottom: 2px; font-size: 13px; }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* EMPTY */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+
+  /* N8N INFO */
+  .n8n-banner {
+    margin: 0 28px 16px;
+    background: rgba(184,132,58,0.08);
+    border: 1px solid rgba(184,132,58,0.2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .n8n-icon { font-size: 18px; flex-shrink: 0; }
+  .n8n-text { flex: 1; line-height: 1.5; }
+  .n8n-text strong { color: var(--gold); }
+
+  @media (max-width: 768px) {
+    .layout { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: static; }
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .topbar { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-logo">Ajans Paneli</div>
+      <div class="brand-sub">Proje Takip Sistemi</div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Firmalar</div>
+      <div id="firm-list"></div>
+    </div>
+    <button class="add-firm-btn" onclick="openAddFirm()">
+      <span>+</span> Firma Ekle
+    </button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="main-title">Firma Seç</div>
+        <div class="page-sub" id="main-sub">Sol panelden bir firma seçin</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="openWebhookModal()">
+          ⚙ n8n Webhook
+        </button>
+        <button class="btn btn-primary" onclick="resetFirm()" id="reset-btn" style="display:none">
+          ↺ Sıfırla
+        </button>
+      </div>
+    </div>
+
+    <div class="stats-row" id="stats-row" style="display:none">
+      <div class="stat-card">
+        <div class="stat-label">Toplam Görev</div>
+        <div class="stat-val" id="s-total">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Tamamlanan</div>
+        <div class="stat-val green" id="s-done">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">İlerleme</div>
+        <div class="stat-val gold" id="s-pct">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Kalan Görev</div>
+        <div class="stat-val" id="s-left">—</div>
+        <div class="stat-sub" id="s-crit"></div>
+      </div>
+    </div>
+
+    <div class="prog-bar-wrap" id="prog-wrap" style="display:none">
+      <div class="prog-bar-fill" id="prog-fill" style="width:0%"></div>
+    </div>
+
+    <div id="n8n-banner-wrap" style="display:none">
+      <div class="n8n-banner">
+        <div class="n8n-icon">🔗</div>
+        <div class="n8n-text">
+          <strong>n8n Webhook aktif.</strong> Görev tamamlandığında müşteriye otomatik bildirim e-postası gönderilecek.
+        </div>
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openWebhookModal()">Düzenle</button>
+      </div>
+    </div>
+
+    <div class="filter-bar" id="filter-bar" style="display:none">
+      <button class="filter-chip on" onclick="setFilter('hepsi',this)">Tümü</button>
+      <button class="filter-chip" onclick="setFilter('shopify',this)">Shopify</button>
+      <button class="filter-chip" onclick="setFilter('tasarim',this)">Tasarım</button>
+      <button class="filter-chip" onclick="setFilter('icerik',this)">İçerik</button>
+      <button class="filter-chip" onclick="setFilter('teknik',this)">Teknik</button>
+      <button class="filter-chip" onclick="setFilter('kritik',this)">Kritik</button>
+      <button class="filter-chip" onclick="setFilter('tamamlandi',this)">Tamamlananlar</button>
+      <div class="filter-sep"></div>
+      <div class="webhook-status" id="webhook-status">
+        <div class="ws-dot" id="ws-dot"></div>
+        <span id="ws-label">Webhook yok</span>
+      </div>
+    </div>
+
+    <div class="groups-wrap" id="groups-wrap">
+      <div class="empty-state">
+        <div class="empty-icon">🏗</div>
+        <div class="empty-title">Firma seçilmedi</div>
+        <div>Sol panelden bir firma seçin veya yeni firma ekleyin</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- WEBHOOK MODAL -->
+<div class="modal-overlay" id="webhook-modal">
+  <div class="modal">
+    <div class="modal-title">n8n Webhook Ayarları</div>
+    <div class="modal-sub">Görev tamamlandığında n8n üzerinden müşteriye otomatik e-posta gönderilir. n8n webhook URL'ini buraya girin.</div>
+    <div class="modal-field">
+      <div class="modal-label">N8N WEBHOOK URL</div>
+      <input class="modal-input" id="webhook-url-input" placeholder="https://your-n8n.app/webhook/xxxx" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">MÜŞTERİ E-POSTA ADRESİ</div>
+      <input class="modal-input" id="webhook-email-input" placeholder="musteri@firma.com" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">MÜŞTERİ ADI</div>
+      <input class="modal-input" id="webhook-name-input" placeholder="Ahmet Bey" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('webhook-modal')">İptal</button>
+      <button class="btn btn-primary" onclick="saveWebhook()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FIRM MODAL -->
+<div class="modal-overlay" id="add-firm-modal">
+  <div class="modal firm-modal">
+    <div class="modal-title">Yeni Firma Ekle</div>
+    <div class="modal-sub">Firma bilgilerini girin. Görevler Goldfalez şablonuyla otomatik oluşturulur.</div>
+    <div class="modal-field">
+      <div class="modal-label">FİRMA ADI</div>
+      <input class="modal-input" id="new-firm-name" placeholder="Örn: Goldfalez" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">PROJE TÜRÜ</div>
+      <select class="modal-input" id="new-firm-type">
+        <option value="shopify">Shopify E-Ticaret Sitesi</option>
+        <option value="kurumsal">Kurumsal Web Sitesi</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('add-firm-modal')">İptal</button>
+      <button class="btn btn-primary" onclick="addFirm()">Firma Oluştur</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── VERİ ───────────────────────────────────────────────────────────────────
+
+const TASK_TEMPLATE = [
+  { id:'g1', badge:'Gün 1', badgeColor:'#185FA5', badgeBg:'rgba(24,95,165,0.2)', title:'Shopify Hazırlık & Temel Kurulum', meta:'~4 saat',
+    tasks:[
+      {id:'t1',name:'Shrine Pro temasını satın al ve yükle',note:'themes.shopify.com — lisansı hemen aktifleştir',tags:['shopify','kritik']},
+      {id:'t2',name:'Mevcut tema yedekle',note:'Settings > Themes > Actions > Duplicate',tags:['shopify']},
+      {id:'t3',name:'Shopify Plan kontrolü',note:'Basic plan checkout özelleştirmesine izin vermiyor — kontrol et',tags:['shopify','kritik']},
+      {id:'t4',name:'Domain bağlantısını doğrula',note:'Settings > Domains — SSL sertifikası aktif mi?',tags:['shopify','teknik']},
+      {id:'t5',name:'Para birimi: Türk Lirası (TRY) ayarla',note:'Settings > Store details > Currency',tags:['shopify']},
+      {id:'t6',name:'Dil: Türkçe ayarla',note:'Shrine Pro dil dosyasını yükle',tags:['shopify']},
+      {id:'t7',name:'Ödeme yöntemi kur (iyzico / PayTR)',note:'Apps > Payment providers',tags:['teknik','kritik']},
+      {id:'t8',name:'Kargo ayarları (Aras, Yurtiçi, MNG)',note:'Settings > Shipping > Shipping zones',tags:['shopify','teknik']},
+    ]},
+  { id:'g2', badge:'Gün 2', badgeColor:'#534AB7', badgeBg:'rgba(83,74,183,0.2)', title:'Marka Kimliği & Tema Ayarları', meta:'~4 saat',
+    tasks:[
+      {id:'t9',name:'Renk paletini theme editor\'a gir',note:'Antrasit #2A2A28 + Bakır Altın #B8843A + Krem #F5F0E8',tags:['tasarim','kritik']},
+      {id:'t10',name:'Fontları seç ve yükle',note:'Playfair Display (başlık) + DM Sans (body)',tags:['tasarim']},
+      {id:'t11',name:'Logo yükle (SVG veya PNG şeffaf bg)',note:'Header — en az 400px genişlik',tags:['tasarim','shopify']},
+      {id:'t12',name:'Favicon yükle',note:'Settings > Brand > Favicon — 32x32',tags:['shopify']},
+      {id:'t13',name:'Duyuru barı ayarla',note:'"Ücretsiz Kargo | Fabrika Fiyatı | Koşulsuz İade"',tags:['tasarim','shopify']},
+      {id:'t14',name:'Buton stili, border radius, hover efekti',note:'Theme settings > Buttons',tags:['tasarim']},
+      {id:'t15',name:'Sosyal medya linkleri gir',note:'Instagram, Facebook, WhatsApp, YouTube',tags:['shopify']},
+    ]},
+  { id:'g3', badge:'Gün 3', badgeColor:'#534AB7', badgeBg:'rgba(83,74,183,0.2)', title:'Header & Navigasyon', meta:'~3 saat',
+    tasks:[
+      {id:'t16',name:'Mega menü yapısını oluştur',note:'Salon, Yatak Odası, Mutfak, Yemek Odası, Antre-Hol, Çalışma Odası',tags:['tasarim','shopify','kritik']},
+      {id:'t17',name:'Mega menüde kategori görseli ekle',note:'Her kategori için 1 görsel',tags:['tasarim']},
+      {id:'t18',name:'Arama kutusunu predictive moda al',note:'Header > Search type: Predictive search',tags:['shopify','tasarim']},
+      {id:'t19',name:'Sticky header aktifleştir',note:'Header > Sticky header: enabled',tags:['tasarim']},
+      {id:'t20',name:'WhatsApp butonu ekle',note:'Floating buton veya header içi',tags:['teknik','tasarim']},
+      {id:'t21',name:'Mobil hamburger menüsünü test et',note:'Küçük ekranda menü düzeni kontrolü',tags:['tasarim','test']},
+    ]},
+  { id:'g4', badge:'Gün 4', badgeColor:'#0C447C', badgeBg:'rgba(12,68,124,0.2)', title:'Ana Sayfa Tasarımı', meta:'~5 saat',
+    tasks:[
+      {id:'t22',name:'Hero banner — büyük ana görsel',note:'1920x800px masaüstü, mobil 800x600px',tags:['tasarim','icerik','kritik']},
+      {id:'t23',name:'Kategori grid section',note:'6-8 kategori kartı — görsel + isim + link',tags:['tasarim','shopify']},
+      {id:'t24',name:'Güven rozetleri strip',note:'"Ücretsiz Kargo / Fabrika Fiyatı / Koşulsuz İade / Hızlı Teslimat"',tags:['tasarim','icerik']},
+      {id:'t25',name:'"Öne Çıkan Ürünler" section',note:'Featured collection — 4 ürün, manuel seç',tags:['tasarim','shopify']},
+      {id:'t26',name:'"Yeni Gelenler" section',note:'New arrivals koleksiyonu — 4-8 ürün',tags:['tasarim','shopify']},
+      {id:'t27',name:'"Fırsat Köşesi" banner',note:'İndirimli ürünler koleksiyonu için özel section',tags:['tasarim','shopify']},
+      {id:'t28',name:'Müşteri yorumları carousel',note:'Judge.me kurulduktan sonra ekle',tags:['tasarim']},
+      {id:'t29',name:'Footer tasarımı',note:'Logo, kategoriler, iletişim, sosyal medya, ödeme logoları',tags:['tasarim','shopify']},
+      {id:'t30',name:'Ana sayfa mobil kontrolü',note:'Her section\'ı telefonda test et',tags:['test','kritik']},
+    ]},
+  { id:'g5', badge:'Gün 5', badgeColor:'#3B6D11', badgeBg:'rgba(59,109,17,0.2)', title:'Koleksiyon Sayfaları', meta:'~3 saat',
+    tasks:[
+      {id:'t31',name:'Koleksiyon şablonunu düzenle',note:'Filtre paneli, sıralama, sayfa başı ürün sayısı',tags:['shopify','tasarim','kritik']},
+      {id:'t32',name:'Filtre panelini aktifleştir',note:'Fiyat range, renk swatch, malzeme, boyut',tags:['shopify','tasarim']},
+      {id:'t33',name:'Ürün kart stilini ayarla',note:'Hover ikinci görsel, fiyat stili, hizalama',tags:['tasarim']},
+      {id:'t34',name:'Koleksiyon banner görseli',note:'Her koleksiyon için başlık görseli',tags:['tasarim','icerik']},
+      {id:'t35',name:'Pagination ayarla',note:'Shrine: Ürün ızgarası > Pagination — 24 ürün/sayfa',tags:['shopify']},
+      {id:'t36',name:'Boş koleksiyon durumu mesajını ayarla',note:'Filtre sonuç yoksa gösterilecek metin',tags:['icerik']},
+    ]},
+  { id:'g6', badge:'Gün 6', badgeColor:'#3B6D11', badgeBg:'rgba(59,109,17,0.2)', title:'Ürün Detay Sayfası (PDP)', meta:'~4 saat',
+    tasks:[
+      {id:'t37',name:'Ürün şablonunu düzenle',note:'Galeri + form + açıklama + benzer ürünler',tags:['shopify','tasarim','kritik']},
+      {id:'t38',name:'Galeri düzenini seç',note:'Sol galeri + sağ form — mobilya için önerilen',tags:['tasarim']},
+      {id:'t39',name:'Varyant renk swatch\'larını ayarla',note:'Custom colors listesi: Ekru:#C8B89A, Kahverengi:#5C3D1E',tags:['shopify','tasarim']},
+      {id:'t40',name:'Sticky add-to-cart bar',note:'Shrine\'da mevcut — aktifleştir',tags:['tasarim','kritik']},
+      {id:'t41',name:'Ürün açıklama alanını formatla',note:'Kısa açıklama + teknik özellikler accordion + boyut tablosu',tags:['tasarim','icerik']},
+      {id:'t42',name:'Güven rozetlerini PDP\'ye ekle',note:'Sepete ekle butonunun altına',tags:['tasarim','icerik']},
+      {id:'t43',name:'"Benzer Ürünler" section',note:'Related products — aynı koleksiyondan — 4 ürün',tags:['shopify','tasarim']},
+      {id:'t44',name:'PDP mobil kontrolü',note:'Galeri swipe, buton boyutu, sticky bar',tags:['test','kritik']},
+    ]},
+  { id:'g7', badge:'Gün 7', badgeColor:'#854F0B', badgeBg:'rgba(133,79,11,0.2)', title:'Statik Sayfalar & İçerik', meta:'~3 saat',
+    tasks:[
+      {id:'t45',name:'Hakkımızda sayfası',note:'Goldfalez hikayesi, fabrika, kurucu — "Neden Goldfalez" vurgusu',tags:['icerik','tasarim']},
+      {id:'t46',name:'İletişim sayfası',note:'Form + harita + telefon + WhatsApp + e-posta',tags:['icerik','shopify']},
+      {id:'t47',name:'SSS sayfası',note:'Kargo, iade, montaj, ödeme — accordion formatında',tags:['icerik']},
+      {id:'t48',name:'İade & Değişim politikası',note:'Settings > Policies + ayrı sayfa',tags:['icerik','shopify']},
+      {id:'t49',name:'Gizlilik politikası & KVKK',note:'Shopify şablonunu Türkiye mevzuatına uyarla',tags:['icerik','shopify']},
+      {id:'t50',name:'Kargo & Teslimat bilgi sayfası',note:'Kargo firmaları, süre, ücretsiz kargo limiti',tags:['icerik']},
+    ]},
+  { id:'g8', badge:'Gün 8', badgeColor:'#0F6E56', badgeBg:'rgba(15,110,86,0.2)', title:'Teknik Entegrasyonlar', meta:'~4 saat',
+    tasks:[
+      {id:'t51',name:'Judge.me ürün yorumları kur',note:'Apps > Judge.me — widget\'ı PDP\'ye ekle',tags:['teknik','shopify']},
+      {id:'t52',name:'WhatsApp Chat uygulaması kur',note:'Sağ alt köşe floating buton',tags:['teknik']},
+      {id:'t53',name:'Google Analytics 4 kur',note:'Online Store > Preferences > Google Analytics',tags:['teknik','kritik']},
+      {id:'t54',name:'Meta Pixel kur',note:'Apps > Facebook & Instagram channel',tags:['teknik']},
+      {id:'t55',name:'Google Search Console & sitemap',note:'sitemap.xml — Search Console\'a submit',tags:['teknik']},
+      {id:'t56',name:'Hız testi ve optimizasyon',note:'PageSpeed Insights — mobil 60+, masaüstü 80+',tags:['teknik','test']},
+      {id:'t57',name:'robots.txt kontrolü',note:'/robots.txt — admin sayfaları disallow\'da mı?',tags:['teknik']},
+    ]},
+  { id:'g9', badge:'Gün 9', badgeColor:'#A32D2D', badgeBg:'rgba(163,45,45,0.2)', title:'Kapsamlı Test & Düzeltme', meta:'~4 saat',
+    tasks:[
+      {id:'t58',name:'Tam sipariş testi',note:'Test ürünü ekle, sepet, ödeme — baştan sona',tags:['test','kritik']},
+      {id:'t59',name:'Tüm formları test et',note:'İletişim formu, e-posta kayıt, arama',tags:['test']},
+      {id:'t60',name:'Mobil tam tarama (iOS + Android)',note:'Safari ve Chrome\'da her sayfa',tags:['test','kritik']},
+      {id:'t61',name:'Tüm linkleri kontrol et',note:'Menü, footer, butonlar, koleksiyon linkleri',tags:['test']},
+      {id:'t62',name:'404 sayfasını özelleştir',note:'Ana sayfaya yönlendirme butonu ekle',tags:['tasarim','shopify']},
+      {id:'t63',name:'Ürün görseli kalite kontrolü',note:'800 üründen rastgele 50 ürün aç',tags:['test','icerik']},
+      {id:'t64',name:'Sayfa başlıkları ve meta açıklamaları',note:'Ana sayfa, koleksiyonlar için title + meta desc',tags:['teknik','icerik']},
+      {id:'t65',name:'Çapraz tarayıcı testi',note:'Chrome, Safari, Firefox, Edge',tags:['test']},
+    ]},
+  { id:'g10', badge:'Gün 10', badgeColor:'#444441', badgeBg:'rgba(68,68,65,0.25)', title:'Yayın & Müşteri Devri', meta:'~2 saat',
+    tasks:[
+      {id:'t66',name:'Password page\'i kapat — canlıya al',note:'Online Store > Preferences > Password protection',tags:['shopify','kritik']},
+      {id:'t67',name:'Son hız testi',note:'PageSpeed skoru — mobil 60+, masaüstü 80+',tags:['test','teknik']},
+      {id:'t68',name:'Google Analytics canlı kontrol',note:'Gerçek zamanlı ziyaretçi görünüyor mu?',tags:['teknik','test']},
+      {id:'t69',name:'Müşteriye panel eğitimi ver',note:'Ürün ekleme, sipariş takibi, indirim kodu',tags:['kritik']},
+      {id:'t70',name:'Staff account oluştur',note:'Müşteriye kendi e-postasıyla giriş yetkisi',tags:['shopify']},
+      {id:'t71',name:'Kullanım kılavuzu teslim et',note:'1 sayfalık PDF — sık kullanılan işlemler',tags:['icerik']},
+    ]},
+];
+
+// ─── STATE ──────────────────────────────────────────────────────────────────
+
+let firms = JSON.parse(localStorage.getItem('ajansFirms') || '[]');
+let activeFirmId = null;
+let activeFilter = 'hepsi';
+
+if (firms.length === 0) {
+  firms = [{
+    id: 'goldfalez',
+    name: 'Goldfalez',
+    type: 'shopify',
+    tasks: {},
+    webhook: { url: '', email: '', name: '' },
+    createdAt: new Date().toISOString()
+  }];
+  saveFirms();
+}
+
+function saveFirms() {
+  localStorage.setItem('ajansFirms', JSON.stringify(firms));
+}
+
+function getFirm(id) {
+  return firms.find(f => f.id === id);
+}
+
+function getFirmProgress(firm) {
+  const all = TASK_TEMPLATE.flatMap(g => g.tasks);
+  const done = all.filter(t => firm.tasks[t.id]).length;
+  return { total: all.length, done, pct: Math.round(done / all.length * 100) };
+}
+
+// ─── SIDEBAR ────────────────────────────────────────────────────────────────
+
+function renderSidebar() {
+  const list = document.getElementById('firm-list');
+  list.innerHTML = '';
+  firms.forEach(firm => {
+    const prog = getFirmProgress(firm);
+    const btn = document.createElement('button');
+    btn.className = 'firm-btn' + (firm.id === activeFirmId ? ' active' : '');
+    btn.innerHTML = `
+      <div class="firm-initial">${firm.name.charAt(0).toUpperCase()}</div>
+      <div class="firm-info">
+        <div class="firm-name">${firm.name}</div>
+        <div class="firm-prog">${prog.done}/${prog.total} görev</div>
+      </div>
+      <div class="firm-pct">${prog.pct}%</div>`;
+    btn.onclick = () => selectFirm(firm.id);
+    list.appendChild(btn);
+  });
+}
+
+// ─── SELECT FIRM ────────────────────────────────────────────────────────────
+
+function selectFirm(id) {
+  activeFirmId = id;
+  const firm = getFirm(id);
+  renderSidebar();
+  document.getElementById('main-title').textContent = firm.name;
+  document.getElementById('main-sub').textContent = firm.type === 'shopify' ? 'Shopify E-Ticaret Projesi' : 'Kurumsal Web Projesi';
+  document.getElementById('stats-row').style.display = 'grid';
+  document.getElementById('prog-wrap').style.display = 'block';
+  document.getElementById('filter-bar').style.display = 'flex';
+  document.getElementById('reset-btn').style.display = 'flex';
+  updateWebhookStatus(firm);
+  renderStats(firm);
+  renderGroups(firm);
+}
+
+// ─── STATS ──────────────────────────────────────────────────────────────────
+
+function renderStats(firm) {
+  const prog = getFirmProgress(firm);
+  const allTasks = TASK_TEMPLATE.flatMap(g => g.tasks);
+  const kritik = allTasks.filter(t => t.tags.includes('kritik'));
+  const kritikDone = kritik.filter(t => firm.tasks[t.id]).length;
+
+  document.getElementById('s-total').textContent = prog.total;
+  document.getElementById('s-done').textContent = prog.done;
+  document.getElementById('s-pct').textContent = prog.pct + '%';
+  document.getElementById('s-left').textContent = prog.total - prog.done;
+  document.getElementById('s-crit').textContent = `${kritikDone}/${kritik.length} kritik`;
+  document.getElementById('prog-fill').style.width = prog.pct + '%';
+}
+
+// ─── GROUPS ─────────────────────────────────────────────────────────────────
+
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  renderGroups(getFirm(activeFirmId));
+}
+
+function renderGroups(firm) {
+  const wrap = document.getElementById('groups-wrap');
+  wrap.innerHTML = '';
+
+  TASK_TEMPLATE.forEach(group => {
+    let tasks = group.tasks;
+    if (activeFilter === 'tamamlandi') tasks = tasks.filter(t => firm.tasks[t.id]);
+    else if (activeFilter !== 'hepsi') tasks = tasks.filter(t => t.tags.includes(activeFilter));
+    if (!tasks.length) return;
+
+    const done = tasks.filter(t => firm.tasks[t.id]).length;
+    const pct = Math.round(done / tasks.length * 100);
+
+    const el = document.createElement('div');
+    el.className = 'group';
+    el.innerHTML = `
+      <div class="group-header" onclick="toggleGroup('${group.id}')">
+        <span class="group-day" style="background:${group.badgeBg};color:${group.badgeColor}">${group.badge}</span>
+        <span class="group-title">${group.title}</span>
+        <span class="group-meta">${done}/${tasks.length} · ${group.meta}</span>
+        <span class="group-chevron" id="chev-${group.id}">▶</span>
+      </div>
+      <div class="group-prog">
+        <div class="group-prog-fill" style="width:${pct}%;background:${group.badgeColor}"></div>
+      </div>
+      <div class="tasks-list open" id="tasks-${group.id}">
+        ${tasks.map(task => taskHTML(task, firm)).join('')}
+      </div>`;
+    wrap.appendChild(el);
+
+    const chev = el.querySelector(`#chev-${group.id}`);
+    chev.classList.add('open');
+  });
+}
+
+function taskHTML(task, firm) {
+  const done = !!firm.tasks[task.id];
+  const tagLabels = {shopify:'Shopify',tasarim:'Tasarım',icerik:'İçerik',teknik:'Teknik',kritik:'Kritik',test:'Test'};
+  return `
+    <div class="task-row${done?' done':''}" onclick="toggleTask('${task.id}')">
+      <div class="checkbox${done?' checked':''}">
+        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+          <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="task-body">
+        <div class="task-name">${task.name}</div>
+        ${task.note ? `<div class="task-note">${task.note}</div>` : ''}
+        <div class="task-tags">${task.tags.map(tg=>`<span class="tag tag-${tg}">${tagLabels[tg]}</span>`).join('')}</div>
+      </div>
+      <div class="task-right">
+        <div class="notif-indicator${done?' sent':''}" id="notif-${task.id}"></div>
+      </div>
+    </div>`;
+}
+
+function toggleGroup(id) {
+  const tasks = document.getElementById(`tasks-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  tasks.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+// ─── TOGGLE TASK ────────────────────────────────────────────────────────────
+
+async function toggleTask(taskId) {
+  const firm = getFirm(activeFirmId);
+  const wasDone = !!firm.tasks[taskId];
+  firm.tasks[taskId] = !wasDone;
+  saveFirms();
+  renderStats(firm);
+  renderGroups(firm);
+  renderSidebar();
+
+  if (!wasDone && firm.webhook && firm.webhook.url) {
+    const task = TASK_TEMPLATE.flatMap(g => g.tasks).find(t => t.id === taskId);
+    await sendWebhook(firm, task);
+  }
+}
+
+// ─── WEBHOOK ────────────────────────────────────────────────────────────────
+
+function updateWebhookStatus(firm) {
+  const dot = document.getElementById('ws-dot');
+  const label = document.getElementById('ws-label');
+  const banner = document.getElementById('n8n-banner-wrap');
+  const hasWebhook = firm.webhook && firm.webhook.url;
+  dot.className = 'ws-dot' + (hasWebhook ? ' active' : '');
+  label.textContent = hasWebhook ? 'n8n aktif' : 'Webhook yok';
+  banner.style.display = hasWebhook ? 'block' : 'none';
+}
+
+function openWebhookModal() {
+  const firm = getFirm(activeFirmId);
+  if (!firm) { showToast('Önce firma seçin', '', true); return; }
+  document.getElementById('webhook-url-input').value = firm.webhook?.url || '';
+  document.getElementById('webhook-email-input').value = firm.webhook?.email || '';
+  document.getElementById('webhook-name-input').value = firm.webhook?.name || '';
+  document.getElementById('webhook-modal').classList.add('open');
+}
+
+function saveWebhook() {
+  const firm = getFirm(activeFirmId);
+  firm.webhook = {
+    url: document.getElementById('webhook-url-input').value.trim(),
+    email: document.getElementById('webhook-email-input').value.trim(),
+    name: document.getElementById('webhook-name-input').value.trim(),
+  };
+  saveFirms();
+  closeModal('webhook-modal');
+  updateWebhookStatus(firm);
+  showToast('Webhook kaydedildi', 'Görev tamamlandığında n8n tetiklenecek');
+}
+
+async function sendWebhook(firm, task) {
+  const prog = getFirmProgress(firm);
+  const payload = {
+    event: 'task_completed',
+    firm: firm.name,
+    customer_email: firm.webhook.email,
+    customer_name: firm.webhook.name,
+    task_name: task.name,
+    task_tags: task.tags,
+    progress_done: prog.done,
+    progress_total: prog.total,
+    progress_pct: prog.pct,
+    completed_at: new Date().toISOString(),
+  };
+
+  try {
+    await fetch(firm.webhook.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      mode: 'no-cors'
+    });
+    showToast('Bildirim gönderildi', `"${task.name}" tamamlandı bildirimi ${firm.webhook.email} adresine gönderildi`);
+  } catch(e) {
+    showToast('Webhook hatası', 'n8n\'e bağlanılamadı — URL\'i kontrol edin', true);
+  }
+}
+
+// ─── ADD FIRM ────────────────────────────────────────────────────────────────
+
+function openAddFirm() {
+  document.getElementById('new-firm-name').value = '';
+  document.getElementById('add-firm-modal').classList.add('open');
+}
+
+function addFirm() {
+  const name = document.getElementById('new-firm-name').value.trim();
+  const type = document.getElementById('new-firm-type').value;
+  if (!name) { showToast('Firma adı girin', '', true); return; }
+
+  const id = name.toLowerCase().replace(/[^a-z0-9]/g, '') + Date.now();
+  firms.push({ id, name, type, tasks: {}, webhook: { url:'', email:'', name:'' }, createdAt: new Date().toISOString() });
+  saveFirms();
+  closeModal('add-firm-modal');
+  renderSidebar();
+  selectFirm(id);
+  showToast('Firma oluşturuldu', `${name} için 71 görev hazırlandı`);
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+
+function resetFirm() {
+  if (!activeFirmId) return;
+  if (!confirm('Bu firmanın tüm tamamlanan görevleri sıfırlanacak. Emin misiniz?')) return;
+  const firm = getFirm(activeFirmId);
+  firm.tasks = {};
+  saveFirms();
+  renderStats(firm);
+  renderGroups(firm);
+  renderSidebar();
+  showToast('Sıfırlandı', 'Tüm görevler başa alındı');
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+
+function showToast(title, msg, isError) {
+  const wrap = document.getElementById('toast-wrap');
+  const t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.innerHTML = `<div class="toast-title">${title}</div>${msg ? `<div>${msg}</div>` : ''}`;
+  wrap.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+
+renderSidebar();
+selectFirm(firms[0].id);
+</script>
+</body>
+</html>
