@@ -3,1095 +3,626 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Proje Takip — Ajans Paneli</title>
+<title>Ajans Proje Takip</title>
 <style>
-  :root {
-    --gold: #B8843A;
-    --gold-light: #F5ECD9;
-    --gold-dark: #8A6128;
-    --dark: #1A1A18;
-    --dark2: #242422;
-    --dark3: #2E2E2C;
-    --dark4: #3A3A38;
-    --text: #E8E4DC;
-    --text2: #9A9690;
-    --text3: #5A5652;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --success: #4CAF7D;
-    --success-bg: rgba(76,175,125,0.12);
-    --warning: #E8A020;
-    --radius: 10px;
-    --radius-lg: 16px;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  body {
-    background: var(--dark);
-    color: var(--text);
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    min-height: 100vh;
-    font-size: 14px;
-  }
-
-  /* SIDEBAR */
-  .layout { display: flex; min-height: 100vh; }
-
-  .sidebar {
-    width: 260px;
-    background: var(--dark2);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-    overflow-y: auto;
-  }
-
-  .sidebar-brand {
-    padding: 20px 20px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .brand-logo {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--gold);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-
-  .brand-sub {
-    font-size: 11px;
-    color: var(--text3);
-  }
-
-  .sidebar-section {
-    padding: 16px 12px 8px;
-  }
-
-  .sidebar-section-label {
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    color: var(--text3);
-    text-transform: uppercase;
-    padding: 0 8px;
-    margin-bottom: 6px;
-  }
-
-  .firm-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 10px;
-    border-radius: var(--radius);
-    border: none;
-    background: transparent;
-    color: var(--text2);
-    cursor: pointer;
-    transition: all .15s;
-    text-align: left;
-    font-size: 13px;
-    position: relative;
-  }
-
-  .firm-btn:hover { background: var(--dark3); color: var(--text); }
-  .firm-btn.active { background: rgba(184,132,58,0.15); color: var(--gold); }
-  .firm-btn.active .firm-initial { background: var(--gold); color: #fff; }
-
-  .firm-initial {
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    background: var(--dark4);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px; font-weight: 700;
-    flex-shrink: 0;
-    color: var(--text2);
-    transition: all .15s;
-  }
-
-  .firm-info { flex: 1; min-width: 0; }
-  .firm-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .firm-prog { font-size: 10px; color: var(--text3); margin-top: 1px; }
-
-  .firm-pct {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--text3);
-    flex-shrink: 0;
-  }
-  .firm-btn.active .firm-pct { color: var(--gold); }
-
-  .firm-link-btn {
-    width: 22px; height: 22px;
-    border-radius: 5px;
-    border: none;
-    background: transparent;
-    color: var(--text3);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 12px;
-    flex-shrink: 0;
-    opacity: 0;
-    transition: all .15s;
-    padding: 0;
-  }
-  .firm-btn:hover .firm-link-btn { opacity: 1; }
-  .firm-link-btn:hover { background: var(--dark4); color: var(--gold) !important; }
-
-  .add-firm-btn {
-    width: calc(100% - 24px);
-    margin: 4px 12px 12px;
-    padding: 8px;
-    border-radius: var(--radius);
-    border: 1px dashed var(--border2);
-    background: transparent;
-    color: var(--text3);
-    cursor: pointer;
-    font-size: 12px;
-    transition: all .15s;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
-  .add-firm-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(184,132,58,0.06); }
-
-  /* MAIN */
-  .main { flex: 1; overflow-y: auto; }
-
-  .topbar {
-    padding: 20px 28px 0;
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .page-title { font-size: 22px; font-weight: 700; color: var(--text); }
-  .page-sub { font-size: 13px; color: var(--text3); margin-top: 3px; }
-
-  .topbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-
-  .btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: none;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all .15s;
-    display: flex; align-items: center; gap: 6px;
-  }
-
-  .btn-primary { background: var(--gold); color: #fff; }
-  .btn-primary:hover { background: var(--gold-dark); }
-  .btn-ghost { background: var(--dark3); color: var(--text2); border: 1px solid var(--border2); }
-  .btn-ghost:hover { color: var(--text); border-color: var(--border2); background: var(--dark4); }
-
-  /* STATS */
-  .stats-row {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    padding: 20px 28px;
-  }
-
-  .stat-card {
-    background: var(--dark2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 16px;
-  }
-
-  .stat-label { font-size: 11px; color: var(--text3); margin-bottom: 8px; }
-  .stat-val { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
-  .stat-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
-  .stat-val.gold { color: var(--gold); }
-  .stat-val.green { color: var(--success); }
-
-  /* PROGRESS BAR */
-  .prog-bar-wrap {
-    margin: 0 28px 20px;
-    background: var(--dark3);
-    border-radius: 99px;
-    height: 6px;
-    overflow: hidden;
-  }
-  .prog-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--gold-dark), var(--gold));
-    border-radius: 99px;
-    transition: width .5s cubic-bezier(.4,0,.2,1);
-  }
-
-  /* FILTER BAR */
-  .filter-bar {
-    padding: 0 28px 16px;
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-
-  .filter-chip {
-    padding: 5px 13px;
-    border-radius: 99px;
-    border: 1px solid var(--border2);
-    background: transparent;
-    color: var(--text3);
-    font-size: 12px;
-    cursor: pointer;
-    transition: all .15s;
-  }
-  .filter-chip:hover { color: var(--text2); border-color: var(--border2); }
-  .filter-chip.on { background: rgba(184,132,58,0.15); color: var(--gold); border-color: rgba(184,132,58,0.3); }
-
-  .filter-sep { flex: 1; }
-
-  .webhook-status {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11px; color: var(--text3);
-  }
-  .ws-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text3); }
-  .ws-dot.active { background: var(--success); box-shadow: 0 0 6px var(--success); }
-
-  /* TASK GROUPS */
-  .groups-wrap { padding: 0 28px 40px; }
-
-  .group {
-    margin-bottom: 12px;
-    background: var(--dark2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-  }
-
-  .group-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 18px;
-    cursor: pointer;
-    user-select: none;
-    transition: background .1s;
-  }
-  .group-header:hover { background: var(--dark3); }
-
-  .group-day {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    padding: 3px 9px;
-    border-radius: 6px;
-    flex-shrink: 0;
-  }
-
-  .group-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
-  .group-meta { font-size: 11px; color: var(--text3); }
-  .group-chevron { font-size: 10px; color: var(--text3); transition: transform .2s; margin-left: 4px; }
-  .group-chevron.open { transform: rotate(90deg); }
-
-  .group-prog {
-    height: 3px;
-    background: var(--dark4);
-  }
-  .group-prog-fill {
-    height: 100%;
-    border-radius: 99px;
-    transition: width .4s;
-  }
-
-  .tasks-list { display: none; }
-  .tasks-list.open { display: block; }
-
-  .task-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 11px 18px;
-    border-top: 1px solid var(--border);
-    cursor: pointer;
-    transition: background .1s;
-  }
-  .task-row:hover { background: rgba(255,255,255,0.02); }
-  .task-row.done .task-name { text-decoration: line-through; color: var(--text3); }
-
-  .checkbox {
-    width: 18px; height: 18px;
-    border-radius: 5px;
-    border: 1.5px solid var(--dark4);
-    flex-shrink: 0;
-    margin-top: 1px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-    background: var(--dark3);
-  }
-  .checkbox.checked { background: var(--success); border-color: var(--success); }
-  .checkbox svg { display: none; }
-  .checkbox.checked svg { display: block; }
-
-  .task-body { flex: 1; min-width: 0; }
-  .task-name { font-size: 13px; color: var(--text); line-height: 1.4; }
-  .task-note { font-size: 11px; color: var(--text3); margin-top: 3px; line-height: 1.4; }
-
-  .task-tags { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
-  .tag {
-    font-size: 10px;
-    padding: 2px 7px;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-  .tag-shopify { background: rgba(149,191,71,0.12); color: #95BF47; }
-  .tag-tasarim { background: rgba(184,132,58,0.15); color: var(--gold); }
-  .tag-icerik { background: rgba(76,175,125,0.12); color: var(--success); }
-  .tag-teknik { background: rgba(100,149,237,0.12); color: #6495ED; }
-  .tag-kritik { background: rgba(220,80,80,0.12); color: #DC5050; }
-  .tag-test { background: rgba(180,130,220,0.12); color: #B482DC; }
-
-  .task-right {
-    display: flex; align-items: center; gap: 8px;
-    flex-shrink: 0;
-  }
-
-  .notif-indicator {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--gold);
-    opacity: 0;
-    transition: opacity .3s;
-  }
-  .notif-indicator.sent { background: var(--success); opacity: 1; }
-
-  /* WEBHOOK MODAL */
-  .modal-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 100;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--dark2);
-    border: 1px solid var(--border2);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    width: 480px;
-    max-width: calc(100vw - 32px);
-  }
-  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-  .modal-sub { font-size: 12px; color: var(--text3); margin-bottom: 20px; line-height: 1.5; }
-  .modal-field { margin-bottom: 14px; }
-  .modal-label { font-size: 11px; color: var(--text3); margin-bottom: 5px; letter-spacing: .5px; }
-  .modal-input {
-    width: 100%;
-    padding: 9px 12px;
-    background: var(--dark3);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 13px;
-    outline: none;
-    transition: border .15s;
-  }
-  .modal-input:focus { border-color: var(--gold); }
-  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-
-  /* ADD FIRM MODAL */
-  .firm-modal { width: 400px; }
-
-  /* TOAST */
-  .toast-wrap {
-    position: fixed;
-    bottom: 24px; right: 24px;
-    z-index: 200;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .toast {
-    background: var(--dark2);
-    border: 1px solid var(--border2);
-    border-left: 3px solid var(--success);
-    border-radius: 10px;
-    padding: 12px 16px;
-    font-size: 12px;
-    color: var(--text2);
-    max-width: 300px;
-    animation: toastIn .3s ease;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  }
-  .toast.error { border-left-color: #DC5050; }
-  .toast-title { font-weight: 600; color: var(--text); margin-bottom: 2px; font-size: 13px; }
-  @keyframes toastIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* EMPTY */
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text3);
-  }
-  .empty-icon { font-size: 40px; margin-bottom: 12px; }
-  .empty-title { font-size: 16px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
-
-  /* N8N INFO */
-  .n8n-banner {
-    margin: 0 28px 16px;
-    background: rgba(184,132,58,0.08);
-    border: 1px solid rgba(184,132,58,0.2);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 12px;
-    color: var(--text2);
-  }
-  .n8n-icon { font-size: 18px; flex-shrink: 0; }
-  .n8n-text { flex: 1; line-height: 1.5; }
-  .n8n-text strong { color: var(--gold); }
-
-  .musteri-banner {
-    margin: 16px 28px 0;
-    background: rgba(76,175,125,0.08);
-    border: 1px solid rgba(76,175,125,0.2);
-    border-radius: var(--radius);
-    padding: 12px 18px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: var(--text2);
-  }
-  .musteri-banner strong { color: var(--success); }
-
-  @media (max-width: 768px) {
-    .layout { flex-direction: column; }
-    .sidebar { width: 100%; height: auto; position: static; }
-    .stats-row { grid-template-columns: repeat(2,1fr); }
-    .topbar { flex-direction: column; gap: 12px; }
-  }
+:root{
+  --gold:#B8843A;--gd:#8A6128;--gbg:rgba(184,132,58,.12);
+  --dark:#1A1A18;--d2:#222220;--d3:#2A2A28;--d4:#343432;--d5:#3E3E3C;
+  --tx:#E8E4DC;--tx2:#9A9690;--tx3:#5A5652;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.12);
+  --gr:#4CAF7D;--grbg:rgba(76,175,125,.1);
+  --bl:#6495ED;--blbg:rgba(100,149,237,.1);
+  --rd:#E05555;--rdbg:rgba(224,85,85,.1);
+  --pu:#A07DD0;--pubg:rgba(160,125,208,.1);
+  --r:10px;--rl:16px
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px}
+.layout{display:flex;min-height:100vh}
+.sb{width:268px;background:var(--d2);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.main{flex:1;overflow-y:auto;min-width:0}
+.sb-top{padding:18px 16px 14px;border-bottom:1px solid var(--bd)}
+.sb-n{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase}
+.sb-sub{font-size:11px;color:var(--tx3);margin-top:2px}
+.sb-sec{padding:14px 10px 6px}
+.sb-lbl{font-size:10px;letter-spacing:1.5px;color:var(--tx3);text-transform:uppercase;padding:0 6px;margin-bottom:6px}
+.fb{width:100%;display:flex;align-items:center;gap:9px;padding:8px;border-radius:var(--r);border:none;background:transparent;color:var(--tx2);cursor:pointer;transition:all .15s;text-align:left}
+.fb:hover{background:var(--d3);color:var(--tx)}
+.fb.ac{background:var(--gbg);color:var(--gold)}
+.fb.ac .fav{background:var(--gold);color:#fff}
+.fav{width:32px;height:32px;border-radius:8px;background:var(--d4);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;color:var(--tx2)}
+.fi{flex:1;min-width:0}
+.fn{font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fms{display:flex;gap:3px;margin-top:3px;flex-wrap:wrap}
+.fmt{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:600}
+.fpct{font-size:10px;font-weight:600;color:var(--tx3);flex-shrink:0}
+.fb.ac .fpct{color:var(--gold)}
+.flic{opacity:0;font-size:12px;flex-shrink:0;padding:2px 4px;border-radius:4px;border:none;background:transparent;cursor:pointer;color:var(--tx3);transition:opacity .15s}
+.fb:hover .flic{opacity:1}
+.flic:hover{color:var(--gold)!important;background:var(--d5)}
+.addbtn{width:calc(100% - 20px);margin:4px 10px 14px;padding:8px;border-radius:var(--r);border:1px dashed var(--bd2);background:transparent;color:var(--tx3);cursor:pointer;font-size:12px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.addbtn:hover{border-color:var(--gold);color:var(--gold);background:var(--gbg)}
+.topbar{padding:20px 26px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.pt{font-size:22px;font-weight:700}
+.ps{font-size:12px;color:var(--tx3);margin-top:3px}
+.ta{display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.btn{padding:7px 14px;border-radius:8px;border:none;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.bgold{background:var(--gold);color:#fff}.bgold:hover{background:var(--gd)}
+.bgh{background:var(--d3);color:var(--tx2);border:1px solid var(--bd2)}.bgh:hover{color:var(--tx);background:var(--d4)}
+.bsm{padding:5px 10px;font-size:11px}
+.srow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:18px 26px}
+.sc{background:var(--d2);border:1px solid var(--bd);border-radius:var(--r);padding:14px}
+.sl{font-size:11px;color:var(--tx3);margin-bottom:6px}
+.sv{font-size:24px;font-weight:700;line-height:1}
+.ss{font-size:10px;color:var(--tx3);margin-top:4px}
+.vg{color:var(--gold)}.vgr{color:var(--gr)}
+.pw{margin:0 26px 16px;background:var(--d3);border-radius:99px;height:5px;overflow:hidden}
+.pf{height:100%;background:linear-gradient(90deg,var(--gd),var(--gold));border-radius:99px;transition:width .5s}
+.modtabs{display:flex;gap:6px;padding:0 26px 14px;flex-wrap:wrap;align-items:center}
+.mtab{padding:6px 13px;border-radius:99px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);font-size:12px;cursor:pointer;transition:all .15s}
+.mtab:hover{color:var(--tx2)}
+.on-all{background:var(--gbg);color:var(--gold);border-color:rgba(184,132,58,.3)}
+.on-sh{background:rgba(149,191,71,.12);color:#95BF47;border-color:rgba(149,191,71,.3)}
+.on-mt{background:var(--blbg);color:var(--bl);border-color:rgba(100,149,237,.3)}
+.on-gg{background:var(--rdbg);color:var(--rd);border-color:rgba(224,85,85,.3)}
+.on-oz{background:var(--pubg);color:var(--pu);border-color:rgba(160,125,208,.3)}
+.msep{flex:1}
+.fchip{padding:5px 12px;border-radius:99px;border:1px solid var(--bd2);background:transparent;color:var(--tx3);font-size:11px;cursor:pointer;transition:all .15s}
+.fchip.on{background:var(--d4);color:var(--tx)}
+.gw{padding:0 26px 40px}
+.grp{margin-bottom:10px;background:var(--d2);border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden}
+.gh{display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;user-select:none;transition:background .1s}
+.gh:hover{background:var(--d3)}
+.glb{font-size:9px;font-weight:700;letter-spacing:.8px;padding:3px 8px;border-radius:5px;flex-shrink:0;text-transform:uppercase}
+.gic{font-size:13px;flex-shrink:0}
+.gti{font-size:13px;font-weight:600;flex:1}
+.gme{font-size:11px;color:var(--tx3);flex-shrink:0}
+.gcv{font-size:10px;color:var(--tx3);transition:transform .2s;flex-shrink:0;margin-left:4px}
+.gcv.op{transform:rotate(90deg)}
+.gpg{height:2px;background:var(--d4)}
+.gpf{height:100%;border-radius:99px;transition:width .4s}
+.tlist{display:none}.tlist.op{display:block}
+.trow{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-top:1px solid var(--bd);cursor:pointer;transition:background .1s}
+.trow:hover{background:rgba(255,255,255,.02)}
+.trow.dn .tn{text-decoration:line-through;color:var(--tx3)}
+.ck{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--d5);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s;background:var(--d3)}
+.ck.on{background:var(--gr);border-color:var(--gr)}
+.ck svg{display:none}.ck.on svg{display:block}
+.tbody{flex:1;min-width:0}
+.tn{font-size:13px;line-height:1.4}
+.tnt{font-size:11px;color:var(--tx3);margin-top:2px;line-height:1.4}
+.ttgs{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.ttg{font-size:9px;padding:2px 6px;border-radius:3px;font-weight:600}
+.tsh{background:rgba(149,191,71,.12);color:#95BF47}
+.tmt{background:var(--blbg);color:var(--bl)}
+.tgg{background:var(--rdbg);color:var(--rd)}
+.ttek{background:rgba(100,149,237,.1);color:#7aafff}
+.tkrit{background:rgba(224,85,85,.12);color:var(--rd)}
+.ttas{background:var(--gbg);color:var(--gold)}
+.tice{background:var(--grbg);color:var(--gr)}
+.ttest{background:var(--pubg);color:var(--pu)}
+.toz{background:rgba(160,125,208,.15);color:var(--pu)}
+.tdel{opacity:0;font-size:11px;color:var(--tx3);flex-shrink:0;padding:2px 5px;border-radius:4px;border:none;background:transparent;cursor:pointer;transition:all .15s}
+.trow:hover .tdel{opacity:1}
+.tdel:hover{color:var(--rd);background:var(--rdbg)}
+.emp{text-align:center;padding:60px 20px;color:var(--tx3)}
+.eic{font-size:36px;margin-bottom:12px}
+.eti{font-size:16px;font-weight:600;color:var(--tx2);margin-bottom:6px}
+.n8nbanner{margin:0 26px 14px;background:var(--gbg);border:1px solid rgba(184,132,58,.2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2)}
+.n8nbanner strong{color:var(--gold)}
+.mban{margin:14px 26px 0;background:var(--grbg);border:1px solid rgba(76,175,125,.2);border-radius:var(--r);padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--tx2)}
+.mban strong{color:var(--gr)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;display:none;align-items:center;justify-content:center;padding:16px}
+.ov.op{display:flex}
+.md{background:var(--d2);border:1px solid var(--bd2);border-radius:var(--rl);padding:26px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.mdt{font-size:16px;font-weight:700;margin-bottom:5px}
+.mds{font-size:12px;color:var(--tx3);margin-bottom:20px;line-height:1.5}
+.mfld{margin-bottom:14px}
+.mlbl{font-size:10px;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
+.minp{width:100%;padding:9px 11px;background:var(--d3);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-size:13px;outline:none;transition:border .15s;font-family:inherit}
+.minp:focus{border-color:var(--gold)}
+.mact{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mcard{border:1.5px solid var(--bd2);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;user-select:none}
+.mcard:hover{background:var(--d3)}
+.mcard.ssl{border-color:#95BF47!important;background:rgba(149,191,71,.1)!important}
+.mcard.smt{border-color:var(--bl)!important;background:var(--blbg)!important}
+.mcard.sgg{border-color:var(--rd)!important;background:var(--rdbg)!important}
+.mcard.soz{border-color:var(--gold)!important;background:var(--gbg)!important}
+.mci{font-size:20px;flex-shrink:0}
+.mct{font-size:13px;font-weight:600}
+.mcs{font-size:10px;color:var(--tx3);margin-top:2px}
+.mck{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--bd2);margin-left:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.tw{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:6px}
+.tst{background:var(--d2);border:1px solid var(--bd2);border-left:3px solid var(--gr);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--tx2);max-width:300px;animation:tIn .25s ease;box-shadow:0 4px 20px rgba(0,0,0,.4)}
+.tst.err{border-left-color:var(--rd)}
+.tsti{font-weight:600;color:var(--tx);margin-bottom:2px;font-size:13px}
+@keyframes tIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:768px){.layout{flex-direction:column}.sb{width:100%;height:auto;position:static}.srow{grid-template-columns:repeat(2,1fr)}.topbar{flex-direction:column}.mgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
 <div class="layout">
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-logo">Ajans Paneli</div>
-      <div class="brand-sub">Proje Takip Sistemi</div>
-    </div>
-    <div class="sidebar-section">
-      <div class="sidebar-section-label">Firmalar</div>
-      <div id="firm-list"></div>
-    </div>
-    <button class="add-firm-btn" onclick="openAddFirm()">
-      <span>+</span> Firma Ekle
-    </button>
-  </div>
-
-  <!-- MAIN -->
-  <div class="main">
-    <div class="topbar">
-      <div>
-        <div class="page-title" id="main-title">Firma Seç</div>
-        <div class="page-sub" id="main-sub">Sol panelden bir firma seçin</div>
-      </div>
-      <div class="topbar-actions">
-        <button class="btn btn-ghost" onclick="activeFirmId && copyLink(activeFirmId)" id="copy-link-btn" style="display:none">
-          🔗 Müşteri Linki
-        </button>
-        <button class="btn btn-ghost" onclick="openWebhookModal()">
-          ⚙ n8n Webhook
-        </button>
-        <button class="btn btn-primary" onclick="resetFirm()" id="reset-btn" style="display:none">
-          ↺ Sıfırla
-        </button>
-      </div>
-    </div>
-
-    <div class="stats-row" id="stats-row" style="display:none">
-      <div class="stat-card">
-        <div class="stat-label">Toplam Görev</div>
-        <div class="stat-val" id="s-total">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Tamamlanan</div>
-        <div class="stat-val green" id="s-done">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">İlerleme</div>
-        <div class="stat-val gold" id="s-pct">—</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Kalan Görev</div>
-        <div class="stat-val" id="s-left">—</div>
-        <div class="stat-sub" id="s-crit"></div>
-      </div>
-    </div>
-
-    <div class="prog-bar-wrap" id="prog-wrap" style="display:none">
-      <div class="prog-bar-fill" id="prog-fill" style="width:0%"></div>
-    </div>
-
-    <div id="n8n-banner-wrap" style="display:none">
-      <div class="n8n-banner">
-        <div class="n8n-icon">🔗</div>
-        <div class="n8n-text">
-          <strong>n8n Webhook aktif.</strong> Görev tamamlandığında müşteriye otomatik bildirim e-postası gönderilecek.
-        </div>
-        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openWebhookModal()">Düzenle</button>
-      </div>
-    </div>
-
-    <div class="filter-bar" id="filter-bar" style="display:none">
-      <button class="filter-chip on" onclick="setFilter('hepsi',this)">Tümü</button>
-      <button class="filter-chip" onclick="setFilter('shopify',this)">Shopify</button>
-      <button class="filter-chip" onclick="setFilter('tasarim',this)">Tasarım</button>
-      <button class="filter-chip" onclick="setFilter('icerik',this)">İçerik</button>
-      <button class="filter-chip" onclick="setFilter('teknik',this)">Teknik</button>
-      <button class="filter-chip" onclick="setFilter('kritik',this)">Kritik</button>
-      <button class="filter-chip" onclick="setFilter('tamamlandi',this)">Tamamlananlar</button>
-      <div class="filter-sep"></div>
-      <div class="webhook-status" id="webhook-status">
-        <div class="ws-dot" id="ws-dot"></div>
-        <span id="ws-label">Webhook yok</span>
-      </div>
-    </div>
-
-    <div class="groups-wrap" id="groups-wrap">
-      <div class="empty-state">
-        <div class="empty-icon">🏗</div>
-        <div class="empty-title">Firma seçilmedi</div>
-        <div>Sol panelden bir firma seçin veya yeni firma ekleyin</div>
-      </div>
+<div class="sb">
+  <div class="sb-top"><div class="sb-n">Ajans Paneli</div><div class="sb-sub">Proje Takip Sistemi</div></div>
+  <div class="sb-sec"><div class="sb-lbl">Firmalar</div><div id="fl"></div></div>
+  <button class="addbtn" onclick="openAdd()">+ Firma Ekle</button>
+</div>
+<div class="main">
+  <div class="topbar">
+    <div><div class="pt" id="pt">Firma Seç</div><div class="ps" id="ps">Sol panelden bir firma seçin</div></div>
+    <div class="ta" id="ta" style="display:none">
+      <button class="btn bgh bsm" onclick="copyLink()">&#x1F517; Müşteri Linki</button>
+      <button class="btn bgh bsm" onclick="openWH()">&#x2699; n8n</button>
+      <button class="btn bgh bsm" onclick="resetF()">&#x21BA; Sıfırla</button>
     </div>
   </div>
+  <div id="mban" class="mban" style="display:none"><span>&#x1F440;</span><div id="mban-t"></div></div>
+  <div id="srow" class="srow" style="display:none">
+    <div class="sc"><div class="sl">Toplam Görev</div><div class="sv" id="st">—</div></div>
+    <div class="sc"><div class="sl">Tamamlanan</div><div class="sv vgr" id="sd">—</div></div>
+    <div class="sc"><div class="sl">İlerleme</div><div class="sv vg" id="sp">—</div></div>
+    <div class="sc"><div class="sl">Kalan</div><div class="sv" id="sll">—</div><div class="ss" id="skr"></div></div>
+  </div>
+  <div id="pw" class="pw" style="display:none"><div class="pf" id="pf" style="width:0%"></div></div>
+  <div id="n8nbanner" class="n8nbanner" style="display:none">
+    <span>&#x1F517;</span><div><strong>n8n aktif</strong> — Görev tamamlandığında müşteriye otomatik bildirim gönderilir.</div>
+    <button class="btn bgh bsm" onclick="openWH()" style="margin-left:auto">Düzenle</button>
+  </div>
+  <div class="modtabs" id="modtabs" style="display:none"></div>
+  <div class="gw" id="gw"><div class="emp"><div class="eic">&#x1F3D7;</div><div class="eti">Firma seçilmedi</div><div>Sol panelden seçin veya yeni firma ekleyin</div></div></div>
+</div>
+</div>
+<div class="tw" id="tw"></div>
+
+<!-- ADD FIRM -->
+<div class="ov" id="modal-add">
+<div class="md">
+  <div class="mdt">Yeni Firma Ekle</div>
+  <div class="mds">Firma adını girin ve hangi hizmetleri alacağını seçin. Her modülün görev listesi otomatik oluşturulur. Birden fazla seçebilirsiniz.</div>
+  <div class="mfld"><div class="mlbl">Firma Adı</div><input class="minp" id="ia-name" placeholder="Örn: Goldfalez" /></div>
+  <div class="mfld">
+    <div class="mlbl">Hizmet Modülleri</div>
+    <div class="mgrid" style="margin-bottom:6px">
+      <div class="mcard" id="mc-sh" onclick="togM('sh')"><div class="mci">&#x1F6CD;</div><div><div class="mct">Shopify</div><div class="mcs">E-ticaret sitesi</div></div><div class="mck" id="mck-sh"></div></div>
+      <div class="mcard" id="mc-mt" onclick="togM('mt')"><div class="mci">&#x1F4D8;</div><div><div class="mct">Meta Ads</div><div class="mcs">Facebook & Instagram</div></div><div class="mck" id="mck-mt"></div></div>
+      <div class="mcard" id="mc-gg" onclick="togM('gg')"><div class="mci">&#x1F50D;</div><div><div class="mct">Google Ads</div><div class="mcs">Arama & Shopping</div></div><div class="mck" id="mck-gg"></div></div>
+      <div class="mcard" id="mc-oz" onclick="togM('oz')" style="grid-column:1/-1"><div class="mci">&#x270F;&#xFE0F;</div><div><div class="mct">Boş Proje</div><div class="mcs">Sadece özel görevler ekleyeceğim</div></div><div class="mck" id="mck-oz"></div></div>
+    </div>
+  </div>
+  <div class="mfld"><div class="mlbl">Müşteri E-postası (opsiyonel)</div><input class="minp" id="ia-email" placeholder="musteri@firma.com" /></div>
+  <div class="mact"><button class="btn bgh" onclick="closeM('modal-add')">İptal</button><button class="btn bgold" onclick="addFirm()">Oluştur</button></div>
+</div>
 </div>
 
-<!-- TOAST -->
-<div class="toast-wrap" id="toast-wrap"></div>
-
-<!-- WEBHOOK MODAL -->
-<div class="modal-overlay" id="webhook-modal">
-  <div class="modal">
-    <div class="modal-title">n8n Webhook Ayarları</div>
-    <div class="modal-sub">Görev tamamlandığında n8n üzerinden müşteriye otomatik e-posta gönderilir. n8n webhook URL'ini buraya girin.</div>
-    <div class="modal-field">
-      <div class="modal-label">N8N WEBHOOK URL</div>
-      <input class="modal-input" id="webhook-url-input" placeholder="https://your-n8n.app/webhook/xxxx" />
-    </div>
-    <div class="modal-field">
-      <div class="modal-label">MÜŞTERİ E-POSTA ADRESİ</div>
-      <input class="modal-input" id="webhook-email-input" placeholder="musteri@firma.com" />
-    </div>
-    <div class="modal-field">
-      <div class="modal-label">MÜŞTERİ ADI</div>
-      <input class="modal-input" id="webhook-name-input" placeholder="Ahmet Bey" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('webhook-modal')">İptal</button>
-      <button class="btn btn-primary" onclick="saveWebhook()">Kaydet</button>
-    </div>
-  </div>
+<!-- WEBHOOK -->
+<div class="ov" id="modal-wh">
+<div class="md" style="max-width:440px">
+  <div class="mdt">n8n Webhook Ayarları</div>
+  <div class="mds">Görev tamamlandığında n8n'e JSON gönderilir. Müşteriye otomatik e-posta atabilirsiniz.</div>
+  <div class="mfld"><div class="mlbl">Webhook URL</div><input class="minp" id="iw-url" placeholder="https://your-n8n.app/webhook/xxxx" /></div>
+  <div class="mfld"><div class="mlbl">Müşteri E-posta</div><input class="minp" id="iw-email" placeholder="musteri@firma.com" /></div>
+  <div class="mfld"><div class="mlbl">Müşteri Adı</div><input class="minp" id="iw-name" placeholder="Ahmet Bey" /></div>
+  <div class="mact"><button class="btn bgh" onclick="closeM('modal-wh')">İptal</button><button class="btn bgold" onclick="saveWH()">Kaydet</button></div>
+</div>
 </div>
 
-<!-- ADD FIRM MODAL -->
-<div class="modal-overlay" id="add-firm-modal">
-  <div class="modal firm-modal">
-    <div class="modal-title">Yeni Firma Ekle</div>
-    <div class="modal-sub">Firma bilgilerini girin. Görevler Goldfalez şablonuyla otomatik oluşturulur.</div>
-    <div class="modal-field">
-      <div class="modal-label">FİRMA ADI</div>
-      <input class="modal-input" id="new-firm-name" placeholder="Örn: Goldfalez" />
-    </div>
-    <div class="modal-field">
-      <div class="modal-label">PROJE TÜRÜ</div>
-      <select class="modal-input" id="new-firm-type">
-        <option value="shopify">Shopify E-Ticaret Sitesi</option>
-        <option value="kurumsal">Kurumsal Web Sitesi</option>
-      </select>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('add-firm-modal')">İptal</button>
-      <button class="btn btn-primary" onclick="addFirm()">Firma Oluştur</button>
-    </div>
-  </div>
+<!-- CUSTOM TASK -->
+<div class="ov" id="modal-ct">
+<div class="md" style="max-width:440px">
+  <div class="mdt">Özel Görev Ekle</div>
+  <div class="mds" id="ct-lbl"></div>
+  <div class="mfld"><div class="mlbl">Görev Adı</div><input class="minp" id="ict-name" placeholder="Görev açıklaması..." /></div>
+  <div class="mfld"><div class="mlbl">Not (opsiyonel)</div><input class="minp" id="ict-note" placeholder="Detay..." /></div>
+  <div class="mact"><button class="btn bgh" onclick="closeM('modal-ct')">İptal</button><button class="btn bgold" onclick="saveCT()">Ekle</button></div>
+</div>
 </div>
 
 <script>
-// ─── VERİ ───────────────────────────────────────────────────────────────────
-
-const TASK_TEMPLATE = [
-  { id:'g1', badge:'Gün 1', badgeColor:'#185FA5', badgeBg:'rgba(24,95,165,0.2)', title:'Shopify Hazırlık & Temel Kurulum', meta:'~4 saat',
-    tasks:[
-      {id:'t1',name:'Shrine Pro temasını satın al ve yükle',note:'themes.shopify.com — lisansı hemen aktifleştir',tags:['shopify','kritik']},
-      {id:'t2',name:'Mevcut tema yedekle',note:'Settings > Themes > Actions > Duplicate',tags:['shopify']},
-      {id:'t3',name:'Shopify Plan kontrolü',note:'Basic plan checkout özelleştirmesine izin vermiyor — kontrol et',tags:['shopify','kritik']},
-      {id:'t4',name:'Domain bağlantısını doğrula',note:'Settings > Domains — SSL sertifikası aktif mi?',tags:['shopify','teknik']},
-      {id:'t5',name:'Para birimi: Türk Lirası (TRY) ayarla',note:'Settings > Store details > Currency',tags:['shopify']},
-      {id:'t6',name:'Dil: Türkçe ayarla',note:'Shrine Pro dil dosyasını yükle',tags:['shopify']},
-      {id:'t7',name:'Ödeme yöntemi kur (iyzico / PayTR)',note:'Apps > Payment providers',tags:['teknik','kritik']},
-      {id:'t8',name:'Kargo ayarları (Aras, Yurtiçi, MNG)',note:'Settings > Shipping > Shipping zones',tags:['shopify','teknik']},
-    ]},
-  { id:'g2', badge:'Gün 2', badgeColor:'#534AB7', badgeBg:'rgba(83,74,183,0.2)', title:'Marka Kimliği & Tema Ayarları', meta:'~4 saat',
-    tasks:[
-      {id:'t9',name:'Renk paletini theme editor\'a gir',note:'Antrasit #2A2A28 + Bakır Altın #B8843A + Krem #F5F0E8',tags:['tasarim','kritik']},
-      {id:'t10',name:'Fontları seç ve yükle',note:'Playfair Display (başlık) + DM Sans (body)',tags:['tasarim']},
-      {id:'t11',name:'Logo yükle (SVG veya PNG şeffaf bg)',note:'Header — en az 400px genişlik',tags:['tasarim','shopify']},
-      {id:'t12',name:'Favicon yükle',note:'Settings > Brand > Favicon — 32x32',tags:['shopify']},
-      {id:'t13',name:'Duyuru barı ayarla',note:'"Ücretsiz Kargo | Fabrika Fiyatı | Koşulsuz İade"',tags:['tasarim','shopify']},
-      {id:'t14',name:'Buton stili, border radius, hover efekti',note:'Theme settings > Buttons',tags:['tasarim']},
-      {id:'t15',name:'Sosyal medya linkleri gir',note:'Instagram, Facebook, WhatsApp, YouTube',tags:['shopify']},
-    ]},
-  { id:'g3', badge:'Gün 3', badgeColor:'#534AB7', badgeBg:'rgba(83,74,183,0.2)', title:'Header & Navigasyon', meta:'~3 saat',
-    tasks:[
-      {id:'t16',name:'Mega menü yapısını oluştur',note:'Salon, Yatak Odası, Mutfak, Yemek Odası, Antre-Hol, Çalışma Odası',tags:['tasarim','shopify','kritik']},
-      {id:'t17',name:'Mega menüde kategori görseli ekle',note:'Her kategori için 1 görsel',tags:['tasarim']},
-      {id:'t18',name:'Arama kutusunu predictive moda al',note:'Header > Search type: Predictive search',tags:['shopify','tasarim']},
-      {id:'t19',name:'Sticky header aktifleştir',note:'Header > Sticky header: enabled',tags:['tasarim']},
-      {id:'t20',name:'WhatsApp butonu ekle',note:'Floating buton veya header içi',tags:['teknik','tasarim']},
-      {id:'t21',name:'Mobil hamburger menüsünü test et',note:'Küçük ekranda menü düzeni kontrolü',tags:['tasarim','test']},
-    ]},
-  { id:'g4', badge:'Gün 4', badgeColor:'#0C447C', badgeBg:'rgba(12,68,124,0.2)', title:'Ana Sayfa Tasarımı', meta:'~5 saat',
-    tasks:[
-      {id:'t22',name:'Hero banner — büyük ana görsel',note:'1920x800px masaüstü, mobil 800x600px',tags:['tasarim','icerik','kritik']},
-      {id:'t23',name:'Kategori grid section',note:'6-8 kategori kartı — görsel + isim + link',tags:['tasarim','shopify']},
-      {id:'t24',name:'Güven rozetleri strip',note:'"Ücretsiz Kargo / Fabrika Fiyatı / Koşulsuz İade / Hızlı Teslimat"',tags:['tasarim','icerik']},
-      {id:'t25',name:'"Öne Çıkan Ürünler" section',note:'Featured collection — 4 ürün, manuel seç',tags:['tasarim','shopify']},
-      {id:'t26',name:'"Yeni Gelenler" section',note:'New arrivals koleksiyonu — 4-8 ürün',tags:['tasarim','shopify']},
-      {id:'t27',name:'"Fırsat Köşesi" banner',note:'İndirimli ürünler koleksiyonu için özel section',tags:['tasarim','shopify']},
-      {id:'t28',name:'Müşteri yorumları carousel',note:'Judge.me kurulduktan sonra ekle',tags:['tasarim']},
-      {id:'t29',name:'Footer tasarımı',note:'Logo, kategoriler, iletişim, sosyal medya, ödeme logoları',tags:['tasarim','shopify']},
-      {id:'t30',name:'Ana sayfa mobil kontrolü',note:'Her section\'ı telefonda test et',tags:['test','kritik']},
-    ]},
-  { id:'g5', badge:'Gün 5', badgeColor:'#3B6D11', badgeBg:'rgba(59,109,17,0.2)', title:'Koleksiyon Sayfaları', meta:'~3 saat',
-    tasks:[
-      {id:'t31',name:'Koleksiyon şablonunu düzenle',note:'Filtre paneli, sıralama, sayfa başı ürün sayısı',tags:['shopify','tasarim','kritik']},
-      {id:'t32',name:'Filtre panelini aktifleştir',note:'Fiyat range, renk swatch, malzeme, boyut',tags:['shopify','tasarim']},
-      {id:'t33',name:'Ürün kart stilini ayarla',note:'Hover ikinci görsel, fiyat stili, hizalama',tags:['tasarim']},
-      {id:'t34',name:'Koleksiyon banner görseli',note:'Her koleksiyon için başlık görseli',tags:['tasarim','icerik']},
-      {id:'t35',name:'Pagination ayarla',note:'Shrine: Ürün ızgarası > Pagination — 24 ürün/sayfa',tags:['shopify']},
-      {id:'t36',name:'Boş koleksiyon durumu mesajını ayarla',note:'Filtre sonuç yoksa gösterilecek metin',tags:['icerik']},
-    ]},
-  { id:'g6', badge:'Gün 6', badgeColor:'#3B6D11', badgeBg:'rgba(59,109,17,0.2)', title:'Ürün Detay Sayfası (PDP)', meta:'~4 saat',
-    tasks:[
-      {id:'t37',name:'Ürün şablonunu düzenle',note:'Galeri + form + açıklama + benzer ürünler',tags:['shopify','tasarim','kritik']},
-      {id:'t38',name:'Galeri düzenini seç',note:'Sol galeri + sağ form — mobilya için önerilen',tags:['tasarim']},
-      {id:'t39',name:'Varyant renk swatch\'larını ayarla',note:'Custom colors listesi: Ekru:#C8B89A, Kahverengi:#5C3D1E',tags:['shopify','tasarim']},
-      {id:'t40',name:'Sticky add-to-cart bar',note:'Shrine\'da mevcut — aktifleştir',tags:['tasarim','kritik']},
-      {id:'t41',name:'Ürün açıklama alanını formatla',note:'Kısa açıklama + teknik özellikler accordion + boyut tablosu',tags:['tasarim','icerik']},
-      {id:'t42',name:'Güven rozetlerini PDP\'ye ekle',note:'Sepete ekle butonunun altına',tags:['tasarim','icerik']},
-      {id:'t43',name:'"Benzer Ürünler" section',note:'Related products — aynı koleksiyondan — 4 ürün',tags:['shopify','tasarim']},
-      {id:'t44',name:'PDP mobil kontrolü',note:'Galeri swipe, buton boyutu, sticky bar',tags:['test','kritik']},
-    ]},
-  { id:'g7', badge:'Gün 7', badgeColor:'#854F0B', badgeBg:'rgba(133,79,11,0.2)', title:'Statik Sayfalar & İçerik', meta:'~3 saat',
-    tasks:[
-      {id:'t45',name:'Hakkımızda sayfası',note:'Goldfalez hikayesi, fabrika, kurucu — "Neden Goldfalez" vurgusu',tags:['icerik','tasarim']},
-      {id:'t46',name:'İletişim sayfası',note:'Form + harita + telefon + WhatsApp + e-posta',tags:['icerik','shopify']},
-      {id:'t47',name:'SSS sayfası',note:'Kargo, iade, montaj, ödeme — accordion formatında',tags:['icerik']},
-      {id:'t48',name:'İade & Değişim politikası',note:'Settings > Policies + ayrı sayfa',tags:['icerik','shopify']},
-      {id:'t49',name:'Gizlilik politikası & KVKK',note:'Shopify şablonunu Türkiye mevzuatına uyarla',tags:['icerik','shopify']},
-      {id:'t50',name:'Kargo & Teslimat bilgi sayfası',note:'Kargo firmaları, süre, ücretsiz kargo limiti',tags:['icerik']},
-    ]},
-  { id:'g8', badge:'Gün 8', badgeColor:'#0F6E56', badgeBg:'rgba(15,110,86,0.2)', title:'Teknik Entegrasyonlar', meta:'~4 saat',
-    tasks:[
-      {id:'t51',name:'Judge.me ürün yorumları kur',note:'Apps > Judge.me — widget\'ı PDP\'ye ekle',tags:['teknik','shopify']},
-      {id:'t52',name:'WhatsApp Chat uygulaması kur',note:'Sağ alt köşe floating buton',tags:['teknik']},
-      {id:'t53',name:'Google Analytics 4 kur',note:'Online Store > Preferences > Google Analytics',tags:['teknik','kritik']},
-      {id:'t54',name:'Meta Pixel kur',note:'Apps > Facebook & Instagram channel',tags:['teknik']},
-      {id:'t55',name:'Google Search Console & sitemap',note:'sitemap.xml — Search Console\'a submit',tags:['teknik']},
-      {id:'t56',name:'Hız testi ve optimizasyon',note:'PageSpeed Insights — mobil 60+, masaüstü 80+',tags:['teknik','test']},
-      {id:'t57',name:'robots.txt kontrolü',note:'/robots.txt — admin sayfaları disallow\'da mı?',tags:['teknik']},
-    ]},
-  { id:'g9', badge:'Gün 9', badgeColor:'#A32D2D', badgeBg:'rgba(163,45,45,0.2)', title:'Kapsamlı Test & Düzeltme', meta:'~4 saat',
-    tasks:[
-      {id:'t58',name:'Tam sipariş testi',note:'Test ürünü ekle, sepet, ödeme — baştan sona',tags:['test','kritik']},
-      {id:'t59',name:'Tüm formları test et',note:'İletişim formu, e-posta kayıt, arama',tags:['test']},
-      {id:'t60',name:'Mobil tam tarama (iOS + Android)',note:'Safari ve Chrome\'da her sayfa',tags:['test','kritik']},
-      {id:'t61',name:'Tüm linkleri kontrol et',note:'Menü, footer, butonlar, koleksiyon linkleri',tags:['test']},
-      {id:'t62',name:'404 sayfasını özelleştir',note:'Ana sayfaya yönlendirme butonu ekle',tags:['tasarim','shopify']},
-      {id:'t63',name:'Ürün görseli kalite kontrolü',note:'800 üründen rastgele 50 ürün aç',tags:['test','icerik']},
-      {id:'t64',name:'Sayfa başlıkları ve meta açıklamaları',note:'Ana sayfa, koleksiyonlar için title + meta desc',tags:['teknik','icerik']},
-      {id:'t65',name:'Çapraz tarayıcı testi',note:'Chrome, Safari, Firefox, Edge',tags:['test']},
-    ]},
-  { id:'g10', badge:'Gün 10', badgeColor:'#444441', badgeBg:'rgba(68,68,65,0.25)', title:'Yayın & Müşteri Devri', meta:'~2 saat',
-    tasks:[
-      {id:'t66',name:'Password page\'i kapat — canlıya al',note:'Online Store > Preferences > Password protection',tags:['shopify','kritik']},
-      {id:'t67',name:'Son hız testi',note:'PageSpeed skoru — mobil 60+, masaüstü 80+',tags:['test','teknik']},
-      {id:'t68',name:'Google Analytics canlı kontrol',note:'Gerçek zamanlı ziyaretçi görünüyor mu?',tags:['teknik','test']},
-      {id:'t69',name:'Müşteriye panel eğitimi ver',note:'Ürün ekleme, sipariş takibi, indirim kodu',tags:['kritik']},
-      {id:'t70',name:'Staff account oluştur',note:'Müşteriye kendi e-postasıyla giriş yetkisi',tags:['shopify']},
-      {id:'t71',name:'Kullanım kılavuzu teslim et',note:'1 sayfalık PDF — sık kullanılan işlemler',tags:['icerik']},
-    ]},
+// ──────────────────────────────────────────
+// ŞABLONLAR
+// ──────────────────────────────────────────
+var SH=[
+  {id:"sp1",lb:"Gün 1",c:"#185FA5",bg:"rgba(24,95,165,.18)",ti:"Shopify Hazırlık & Kurulum",ts:[
+    {id:"s1",n:"Shrine Pro temasını satın al ve yükle",nt:"themes.shopify.com — lisansı aktifleştir",tg:["shopify","kritik"]},
+    {id:"s2",n:"Mevcut tema yedekle",nt:"Settings > Themes > Duplicate",tg:["shopify"]},
+    {id:"s3",n:"Shopify Plan kontrolü",nt:"Basic plan checkout özelleştirmesine izin vermiyor",tg:["shopify","kritik"]},
+    {id:"s4",n:"Domain + SSL doğrula",nt:"Settings > Domains",tg:["shopify","teknik"]},
+    {id:"s5",n:"Para birimi TRY, dil Türkçe ayarla",nt:"Settings > Store details",tg:["shopify"]},
+    {id:"s6",n:"Ödeme yöntemi kur (iyzico / PayTR)",nt:"Apps > Payment providers",tg:["teknik","kritik"]},
+    {id:"s7",n:"Kargo ayarları (Aras, Yurtiçi, MNG)",nt:"Settings > Shipping > Shipping zones",tg:["shopify","teknik"]}
+  ]},
+  {id:"sp2",lb:"Gün 2",c:"#534AB7",bg:"rgba(83,74,183,.18)",ti:"Marka Kimliği & Tema Ayarları",ts:[
+    {id:"s8",n:"Renk paletini gir",nt:"Antrasit #2A2A28 + Altın #B8843A + Krem #F5F0E8",tg:["tasarim","kritik"]},
+    {id:"s9",n:"Fontları seç (Playfair Display + DM Sans)",nt:"Theme settings > Typography",tg:["tasarim"]},
+    {id:"s10",n:"Logo + favicon yükle",nt:"Header — SVG/PNG şeffaf, min 400px",tg:["tasarim","shopify"]},
+    {id:"s11",n:"Duyuru barı ayarla",nt:"Ücretsiz Kargo | Fabrika Fiyatı | Koşulsuz İade",tg:["tasarim","shopify"]},
+    {id:"s12",n:"Buton stili + sosyal medya linkleri",nt:"Theme settings > Buttons",tg:["tasarim"]}
+  ]},
+  {id:"sp3",lb:"Gün 3",c:"#534AB7",bg:"rgba(83,74,183,.18)",ti:"Header & Navigasyon",ts:[
+    {id:"s13",n:"Mega menü yapısı oluştur",nt:"Salon, Yatak Odası, Mutfak, Yemek Odası, Antre-Hol",tg:["tasarim","shopify","kritik"]},
+    {id:"s14",n:"Mega menüde kategori görseli ekle",nt:"Her kategori için 1 görsel",tg:["tasarim"]},
+    {id:"s15",n:"Predictive arama + Sticky header aktifleştir",nt:"Header ayarları",tg:["shopify","tasarim"]},
+    {id:"s16",n:"WhatsApp floating butonu ekle",nt:"Sağ alt köşe — wa.me/90xxx",tg:["teknik","tasarim"]},
+    {id:"s17",n:"Mobil hamburger menü testi",nt:"Küçük ekranda düzen kontrolü",tg:["tasarim","test"]}
+  ]},
+  {id:"sp4",lb:"Gün 4",c:"#0C447C",bg:"rgba(12,68,124,.18)",ti:"Ana Sayfa Tasarımı",ts:[
+    {id:"s18",n:"Hero banner",nt:"1920x800 masaüstü, 800x600 mobil — CTA butonu",tg:["tasarim","icerik","kritik"]},
+    {id:"s19",n:"Kategori grid + Güven rozetleri",nt:"6-8 kategori, ücretsiz kargo şerit",tg:["tasarim","shopify"]},
+    {id:"s20",n:"Öne Çıkan & Yeni Gelenler section",nt:"Featured collection — 4-8 ürün",tg:["tasarim","shopify"]},
+    {id:"s21",n:"Fırsat Köşesi banner",nt:"İndirimli ürünler koleksiyonu",tg:["tasarim","shopify"]},
+    {id:"s22",n:"Footer + Ana sayfa mobil kontrolü",nt:"Logo, kategoriler, sosyal medya, ödeme logoları",tg:["tasarim","test","kritik"]}
+  ]},
+  {id:"sp5",lb:"Gün 5",c:"#3B6D11",bg:"rgba(59,109,17,.18)",ti:"Koleksiyon & Ürün Sayfaları",ts:[
+    {id:"s23",n:"Koleksiyon filtre paneli + Pagination",nt:"24 ürün/sayfa — fiyat, renk, malzeme filtreleri",tg:["shopify","tasarim","kritik"]},
+    {id:"s24",n:"Ürün kart stili",nt:"Hover ikinci görsel, fiyat stili",tg:["tasarim"]},
+    {id:"s25",n:"PDP galeri + Sticky add-to-cart bar",nt:"Sol galeri + sağ form — sticky bar aktif",tg:["tasarim","kritik"]},
+    {id:"s26",n:"Varyant renk kodları + Benzer Ürünler",nt:"Custom colors list + Related products",tg:["shopify","tasarim"]},
+    {id:"s27",n:"PDP mobil kontrolü",nt:"Galeri swipe, buton boyutu, sticky bar",tg:["test","kritik"]}
+  ]},
+  {id:"sp6",lb:"Gün 6",c:"#854F0B",bg:"rgba(133,79,11,.18)",ti:"Statik Sayfalar & Teknik",ts:[
+    {id:"s28",n:"Hakkımızda, İletişim, SSS sayfaları",nt:"Accordion SSS, harita + WhatsApp iletişim",tg:["icerik","tasarim"]},
+    {id:"s29",n:"İade & KVKK politikaları",nt:"Settings > Policies + ayrı sayfa",tg:["icerik","shopify"]},
+    {id:"s30",n:"Judge.me + GA4 + PageSpeed testi",nt:"Mobil 60+, masaüstü 80+",tg:["teknik","kritik"]}
+  ]},
+  {id:"sp7",lb:"Gün 7",c:"#A32D2D",bg:"rgba(163,45,45,.18)",ti:"Test & Yayın",ts:[
+    {id:"s31",n:"Tam sipariş testi",nt:"Ürün — sepet — ödeme — baştan sona",tg:["test","kritik"]},
+    {id:"s32",n:"Mobil tam tarama (iOS + Android)",nt:"Safari ve Chrome'da her sayfa",tg:["test","kritik"]},
+    {id:"s33",n:"Password page kaldır — canlıya al",nt:"Online Store > Preferences > Password",tg:["shopify","kritik"]},
+    {id:"s34",n:"Müşteri panel eğitimi + kılavuz teslim",nt:"Ürün ekleme, sipariş takibi, indirim kodu",tg:["kritik"]}
+  ]}
 ];
 
-// ─── STATE ──────────────────────────────────────────────────────────────────
+var MT=[
+  {id:"mt1",lb:"Adım 1",c:"#185FA5",bg:"rgba(24,95,165,.18)",ti:"Meta Business Suite Kurulumu",ts:[
+    {id:"m1",n:"Meta Business Manager hesabı oluştur",nt:"business.facebook.com — firma adına ayrı hesap",tg:["meta","kritik"]},
+    {id:"m2",n:"Reklam hesabı (Ad Account) oluştur",nt:"Business Settings > Ad Accounts > Add",tg:["meta","kritik"]},
+    {id:"m3",n:"Facebook Sayfası bağla",nt:"Business Settings > Pages",tg:["meta"]},
+    {id:"m4",n:"Instagram hesabı bağla",nt:"Business Settings > Instagram Accounts",tg:["meta"]},
+    {id:"m5",n:"Ödeme yöntemi ekle",nt:"Billing > Payment Methods — kredi kartı veya banka",tg:["meta","kritik"]},
+    {id:"m6",n:"Reklam hesabı günlük limitini kontrol et",nt:"Yeni hesaplarda düşük başlar — yükseltme talebi yap",tg:["meta","teknik"]}
+  ]},
+  {id:"mt2",lb:"Adım 2",c:"#534AB7",bg:"rgba(83,74,183,.18)",ti:"Meta Pixel & Conversions API",ts:[
+    {id:"m7",n:"Meta Pixel oluştur",nt:"Events Manager > Connect Data Sources > Web",tg:["meta","kritik"]},
+    {id:"m8",n:"Pixel'i siteye ekle",nt:"Shopify: Facebook & Instagram channel / GTM ile",tg:["meta","teknik","kritik"]},
+    {id:"m9",n:"Conversions API kur",nt:"iOS 14+ sonrası server-side takip zorunlu",tg:["meta","teknik"]},
+    {id:"m10",n:"Standart olayları doğrula",nt:"PageView, ViewContent, AddToCart, Purchase",tg:["meta","teknik"]},
+    {id:"m11",n:"Test Events ile Pixel testi yap",nt:"Events Manager > Test Events — gerçek zamanlı görünmeli",tg:["meta","test"]}
+  ]},
+  {id:"mt3",lb:"Adım 3",c:"#0C447C",bg:"rgba(12,68,124,.18)",ti:"Ürün Kataloğu & Hedef Kitle",ts:[
+    {id:"m12",n:"Ürün kataloğu oluştur",nt:"Commerce Manager > Catalog — Shopify entegrasyonu ile otomatik",tg:["meta","kritik"]},
+    {id:"m13",n:"Katalog ürünlerini doğrula",nt:"Onaysız ürünleri düzelt — görsel, başlık, fiyat gereksinimleri",tg:["meta","teknik"]},
+    {id:"m14",n:"Custom Audience oluştur",nt:"Website visitors, customer list, engagement audiences",tg:["meta"]},
+    {id:"m15",n:"Lookalike Audience oluştur",nt:"Mevcut müşterilerden %1-3 benzer kitle",tg:["meta"]}
+  ]},
+  {id:"mt4",lb:"Adım 4",c:"#3B6D11",bg:"rgba(59,109,17,.18)",ti:"Kampanya Kurulumu",ts:[
+    {id:"m16",n:"Kampanya mimarisi — Awareness > Conversion huni",nt:"3 aşamalı yapı planla",tg:["meta","kritik"]},
+    {id:"m17",n:"Dönüşüm kampanyası kur",nt:"Objective: Sales — Purchase optimizasyonu",tg:["meta","kritik"]},
+    {id:"m18",n:"Dinamik ürün reklamları (DPA) kur",nt:"Katalog + Pixel — kişiselleştirilmiş ürün reklamları",tg:["meta","kritik"]},
+    {id:"m19",n:"Retargeting kampanyası oluştur",nt:"Sepet terk, sayfa ziyaretçileri, ürün görüntüleyenler",tg:["meta"]},
+    {id:"m20",n:"Reklam görselleri hazırla",nt:"Feed: 1080x1080 / Story: 1080x1920 — 6-8 adet",tg:["meta","icerik"]},
+    {id:"m21",n:"Reklam metinleri yaz — A/B için 2 versiyon",nt:"Primary text, headline, description",tg:["meta","icerik"]},
+    {id:"m22",n:"Kampanyaları yayına al",nt:"İlk 48 saat learning phase — müdahale etme",tg:["meta","kritik"]}
+  ]},
+  {id:"mt5",lb:"Adım 5",c:"#854F0B",bg:"rgba(133,79,11,.18)",ti:"Aylık Yönetim Kurulumu",ts:[
+    {id:"m23",n:"Haftalık optimizasyon planı oluştur",nt:"Bütçe dağılımı, kural bazlı otomasyonlar",tg:["meta"]},
+    {id:"m24",n:"Raporlama şablonu hazırla",nt:"Reach, CPM, CPC, ROAS, dönüşüm — haftalık özet",tg:["meta"]},
+    {id:"m25",n:"Budget cap kurallarını ayarla",nt:"Günlük ve aylık harcama limitleri",tg:["meta","teknik"]}
+  ]}
+];
 
-let firms = JSON.parse(localStorage.getItem('ajansFirms') || '[]');
-let activeFirmId = null;
-let activeFilter = 'hepsi';
+var GG=[
+  {id:"gg1",lb:"Adım 1",c:"#C0392B",bg:"rgba(192,57,43,.18)",ti:"Google Ads Hesap Kurulumu",ts:[
+    {id:"g1",n:"Google Ads hesabı oluştur",nt:"ads.google.com — firma e-postasıyla ayrı hesap",tg:["google","kritik"]},
+    {id:"g2",n:"MCC (Ajans Yönetici) hesabına bağla",nt:"Ajans MCC hesabına link at — merkezi yönetim",tg:["google","teknik"]},
+    {id:"g3",n:"Faturalandırma ayarla",nt:"Ödeme yöntemi — manuel veya otomatik",tg:["google","kritik"]},
+    {id:"g4",n:"Zaman dilimi & para birimi TRY seç",nt:"Hesap oluşturulunca değiştirilemez — dikkatli seç",tg:["google","kritik"]},
+    {id:"g5",n:"Google Analytics 4 bağla",nt:"Tools > Linked Accounts > Google Analytics",tg:["google","teknik","kritik"]}
+  ]},
+  {id:"gg2",lb:"Adım 2",c:"#E67E22",bg:"rgba(230,126,34,.18)",ti:"Dönüşüm Takibi Kurulumu",ts:[
+    {id:"g6",n:"Google Tag Manager kur",nt:"GTM ile merkezi etiket yönetimi — önce GTM, sonra diğerleri",tg:["google","teknik","kritik"]},
+    {id:"g7",n:"Satın alma dönüşümü tanımla",nt:"Tools > Conversions > Website > Purchase",tg:["google","teknik","kritik"]},
+    {id:"g8",n:"Sepete ekleme dönüşümü ekle",nt:"Secondary conversion — optimizasyon sinyali",tg:["google","teknik"]},
+    {id:"g9",n:"Form + telefon tıklama dönüşümü",nt:"İletişim formu ve telefon tıklamaları",tg:["google","teknik"]},
+    {id:"g10",n:"Dönüşümleri Tag Assistant ile test et",nt:"Gerçek zamanlı görünmeli",tg:["google","test","kritik"]}
+  ]},
+  {id:"gg3",lb:"Adım 3",c:"#27AE60",bg:"rgba(39,174,96,.18)",ti:"Google Merchant Center",ts:[
+    {id:"g11",n:"Merchant Center hesabı oluştur",nt:"merchants.google.com — Shopping için zorunlu",tg:["google","kritik"]},
+    {id:"g12",n:"Web sitesini doğrula ve onayla",nt:"Meta tag veya Google Analytics ile doğrulama",tg:["google","teknik","kritik"]},
+    {id:"g13",n:"Ürün feed'i yükle",nt:"Shopify: Google & YouTube channel uygulaması",tg:["google","teknik","kritik"]},
+    {id:"g14",n:"Feed hatalarını düzelt",nt:"Merchant Center > Diagnostics — red ürünleri düzelt",tg:["google","teknik"]},
+    {id:"g15",n:"Kargo ve iade politikasını gir",nt:"Feed onayı için gerekli",tg:["google","teknik"]},
+    {id:"g16",n:"Ads hesabını Merchant'a bağla",nt:"Merchant Center > Growth > Manage Programs > Link",tg:["google","teknik","kritik"]}
+  ]},
+  {id:"gg4",lb:"Adım 4",c:"#2980B9",bg:"rgba(41,128,185,.18)",ti:"Anahtar Kelime & Kampanya Planı",ts:[
+    {id:"g17",n:"Anahtar kelime araştırması yap",nt:"Keyword Planner + rakip analizi — markalı, kategori, ürün bazlı",tg:["google","kritik"]},
+    {id:"g18",n:"Negatif kelime listesi hazırla",nt:"Kategori bazlı kapsamlı liste — bütçe tasarrufu",tg:["google"]},
+    {id:"g19",n:"Kampanya mimarisi planla",nt:"Search + PMAX Shopping + Remarketing + Display",tg:["google","kritik"]}
+  ]},
+  {id:"gg5",lb:"Adım 5",c:"#8E44AD",bg:"rgba(142,68,173,.18)",ti:"Kampanya Kurulumu",ts:[
+    {id:"g20",n:"Search kampanyaları kur",nt:"Kategori bazlı — RSA metinler, reklam uzantıları",tg:["google","kritik"]},
+    {id:"g21",n:"Performance Max (Shopping) kampanyası kur",nt:"Merchant Center feed + asset group",tg:["google","kritik"]},
+    {id:"g22",n:"Remarketing kampanyası kur",nt:"Site ziyaretçileri, sepet terk, ürün görüntüleyenler",tg:["google"]},
+    {id:"g23",n:"Reklam uzantılarını ekle",nt:"Sitelink, Callout, Structured snippet, Call, Price",tg:["google"]},
+    {id:"g24",n:"Display banner görselleri hazırla",nt:"5 farklı GDN boyutu",tg:["google","icerik"]},
+    {id:"g25",n:"Kampanyaları yayına al",nt:"Günlük bütçe, coğrafi hedef, cihaz ayarları",tg:["google","kritik"]}
+  ]},
+  {id:"gg6",lb:"Adım 6",c:"#16A085",bg:"rgba(22,160,133,.18)",ti:"Aylık Yönetim Kurulumu",ts:[
+    {id:"g26",n:"Arama terimi raporu takibi",nt:"Haftalık — negatif kelime güncellemesi",tg:["google"]},
+    {id:"g27",n:"Teklif stratejisi optimizasyonu planı",nt:"Manuel CPC -> Target ROAS geçiş takvimi",tg:["google","teknik"]},
+    {id:"g28",n:"Raporlama şablonu + otomatik kurallar",nt:"Haftalık özet — bütçe cap otomasyonu",tg:["google"]}
+  ]}
+];
 
-if (firms.length === 0) {
-  firms = [{
-    id: 'goldfalez',
-    name: 'Goldfalez',
-    type: 'shopify',
-    tasks: {},
-    webhook: { url: '', email: '', name: '' },
-    createdAt: new Date().toISOString()
-  }];
-  saveFirms();
+var TMPL={sh:SH,mt:MT,gg:GG};
+var MM={sh:{l:"Shopify",i:"🛍",c:"#95BF47",bg:"rgba(149,191,71,.15)"},mt:{l:"Meta",i:"📘",c:"#6495ED",bg:"rgba(100,149,237,.15)"},gg:{l:"Google",i:"🔍",c:"#E05555",bg:"rgba(224,85,85,.15)"}};
+var TC={shopify:"tsh",meta:"tmt",google:"tgg",teknik:"ttek",kritik:"tkrit",tasarim:"ttas",icerik:"tice",test:"ttest",ozel:"toz"};
+var TL={shopify:"Shopify",meta:"Meta",google:"Google",teknik:"Teknik",kritik:"Kritik",tasarim:"Tasarım",icerik:"İçerik",test:"Test",ozel:"Özel",hepsi:"Tümü"};
+
+var firms=JSON.parse(localStorage.getItem("ajans_v5")||"[]");
+var aid=null,fmod="all",ftag="hepsi",pgid=null,pgti="",sm=new Set(),ism=false;
+
+if(!firms.length){
+  firms=[{id:"goldfalez",name:"Goldfalez",mods:["sh"],tasks:{},ct:[],wh:{url:"",email:"",name:""},created:new Date().toISOString()}];
+  sv();
 }
 
-function saveFirms() {
-  localStorage.setItem('ajansFirms', JSON.stringify(firms));
-}
+function sv(){localStorage.setItem("ajans_v5",JSON.stringify(firms));}
+function gf(id){return firms.find(function(f){return f.id===id;});}
+function slug(s){return s.toLowerCase().replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ş/g,"s").replace(/ı/g,"i").replace(/ö/g,"o").replace(/ç/g,"c").replace(/[^a-z0-9]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"");}
 
-function getFirm(id) {
-  return firms.find(f => f.id === id);
-}
-
-function getFirmProgress(firm) {
-  const all = TASK_TEMPLATE.flatMap(g => g.tasks);
-  const done = all.filter(t => firm.tasks[t.id]).length;
-  return { total: all.length, done, pct: Math.round(done / all.length * 100) };
-}
-
-// ─── SIDEBAR ────────────────────────────────────────────────────────────────
-
-function renderSidebar() {
-  const list = document.getElementById('firm-list');
-  list.innerHTML = '';
-  firms.forEach(firm => {
-    const prog = getFirmProgress(firm);
-    const btn = document.createElement('button');
-    btn.className = 'firm-btn' + (firm.id === activeFirmId ? ' active' : '');
-    btn.innerHTML = `
-      <div class="firm-initial">${firm.name.charAt(0).toUpperCase()}</div>
-      <div class="firm-info">
-        <div class="firm-name">${firm.name}</div>
-        <div class="firm-prog">${prog.done}/${prog.total} görev</div>
-      </div>
-      <div class="firm-pct">${prog.pct}%</div>
-      <button class="firm-link-btn" title="Müşteri linki kopyala" onclick="event.stopPropagation();copyLink('${firm.id}')">🔗</button>`;
-    btn.onclick = () => selectFirm(firm.id);
-    list.appendChild(btn);
-  });
-}
-
-// ─── SELECT FIRM ────────────────────────────────────────────────────────────
-
-function selectFirm(id) {
-  activeFirmId = id;
-  const firm = getFirm(id);
-  renderSidebar();
-  document.getElementById('main-title').textContent = firm.name;
-  document.getElementById('main-sub').textContent = firm.type === 'shopify' ? 'Shopify E-Ticaret Projesi' : 'Kurumsal Web Projesi';
-  document.getElementById('stats-row').style.display = 'grid';
-  document.getElementById('prog-wrap').style.display = 'block';
-  document.getElementById('filter-bar').style.display = 'flex';
-  document.getElementById('reset-btn').style.display = 'flex';
-  document.getElementById('copy-link-btn').style.display = 'flex';
-  updateWebhookStatus(firm);
-  renderStats(firm);
-  renderGroups(firm);
-}
-
-// ─── STATS ──────────────────────────────────────────────────────────────────
-
-function renderStats(firm) {
-  const prog = getFirmProgress(firm);
-  const allTasks = TASK_TEMPLATE.flatMap(g => g.tasks);
-  const kritik = allTasks.filter(t => t.tags.includes('kritik'));
-  const kritikDone = kritik.filter(t => firm.tasks[t.id]).length;
-
-  document.getElementById('s-total').textContent = prog.total;
-  document.getElementById('s-done').textContent = prog.done;
-  document.getElementById('s-pct').textContent = prog.pct + '%';
-  document.getElementById('s-left').textContent = prog.total - prog.done;
-  document.getElementById('s-crit').textContent = `${kritikDone}/${kritik.length} kritik`;
-  document.getElementById('prog-fill').style.width = prog.pct + '%';
-}
-
-// ─── GROUPS ─────────────────────────────────────────────────────────────────
-
-function setFilter(f, btn) {
-  activeFilter = f;
-  document.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  renderGroups(getFirm(activeFirmId));
-}
-
-function renderGroups(firm) {
-  const wrap = document.getElementById('groups-wrap');
-  wrap.innerHTML = '';
-
-  TASK_TEMPLATE.forEach(group => {
-    let tasks = group.tasks;
-    if (activeFilter === 'tamamlandi') tasks = tasks.filter(t => firm.tasks[t.id]);
-    else if (activeFilter !== 'hepsi') tasks = tasks.filter(t => t.tags.includes(activeFilter));
-    if (!tasks.length) return;
-
-    const done = tasks.filter(t => firm.tasks[t.id]).length;
-    const pct = Math.round(done / tasks.length * 100);
-
-    const el = document.createElement('div');
-    el.className = 'group';
-    el.innerHTML = `
-      <div class="group-header" onclick="toggleGroup('${group.id}')">
-        <span class="group-day" style="background:${group.badgeBg};color:${group.badgeColor}">${group.badge}</span>
-        <span class="group-title">${group.title}</span>
-        <span class="group-meta">${done}/${tasks.length} · ${group.meta}</span>
-        <span class="group-chevron" id="chev-${group.id}">▶</span>
-      </div>
-      <div class="group-prog">
-        <div class="group-prog-fill" style="width:${pct}%;background:${group.badgeColor}"></div>
-      </div>
-      <div class="tasks-list open" id="tasks-${group.id}">
-        ${tasks.map(task => taskHTML(task, firm)).join('')}
-      </div>`;
-    wrap.appendChild(el);
-
-    const chev = el.querySelector(`#chev-${group.id}`);
-    chev.classList.add('open');
-  });
-}
-
-function taskHTML(task, firm) {
-  const done = !!firm.tasks[task.id];
-  const tagLabels = {shopify:'Shopify',tasarim:'Tasarım',icerik:'İçerik',teknik:'Teknik',kritik:'Kritik',test:'Test'};
-  return `
-    <div class="task-row${done?' done':''}" onclick="toggleTask('${task.id}')">
-      <div class="checkbox${done?' checked':''}">
-        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-          <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="task-body">
-        <div class="task-name">${task.name}</div>
-        ${task.note ? `<div class="task-note">${task.note}</div>` : ''}
-        <div class="task-tags">${task.tags.map(tg=>`<span class="tag tag-${tg}">${tagLabels[tg]}</span>`).join('')}</div>
-      </div>
-      <div class="task-right">
-        <div class="notif-indicator${done?' sent':''}" id="notif-${task.id}"></div>
-      </div>
-    </div>`;
-}
-
-function toggleGroup(id) {
-  const tasks = document.getElementById(`tasks-${id}`);
-  const chev = document.getElementById(`chev-${id}`);
-  tasks.classList.toggle('open');
-  chev.classList.toggle('open');
-}
-
-// ─── TOGGLE TASK ────────────────────────────────────────────────────────────
-
-async function toggleTask(taskId) {
-  const firm = getFirm(activeFirmId);
-  const wasDone = !!firm.tasks[taskId];
-  firm.tasks[taskId] = !wasDone;
-  saveFirms();
-  renderStats(firm);
-  renderGroups(firm);
-  renderSidebar();
-
-  if (!wasDone && firm.webhook && firm.webhook.url) {
-    const task = TASK_TEMPLATE.flatMap(g => g.tasks).find(t => t.id === taskId);
-    await sendWebhook(firm, task);
-  }
-}
-
-// ─── WEBHOOK ────────────────────────────────────────────────────────────────
-
-function updateWebhookStatus(firm) {
-  const dot = document.getElementById('ws-dot');
-  const label = document.getElementById('ws-label');
-  const banner = document.getElementById('n8n-banner-wrap');
-  const hasWebhook = firm.webhook && firm.webhook.url;
-  dot.className = 'ws-dot' + (hasWebhook ? ' active' : '');
-  label.textContent = hasWebhook ? 'n8n aktif' : 'Webhook yok';
-  banner.style.display = hasWebhook ? 'block' : 'none';
-}
-
-function openWebhookModal() {
-  const firm = getFirm(activeFirmId);
-  if (!firm) { showToast('Önce firma seçin', '', true); return; }
-  document.getElementById('webhook-url-input').value = firm.webhook?.url || '';
-  document.getElementById('webhook-email-input').value = firm.webhook?.email || '';
-  document.getElementById('webhook-name-input').value = firm.webhook?.name || '';
-  document.getElementById('webhook-modal').classList.add('open');
-}
-
-function saveWebhook() {
-  const firm = getFirm(activeFirmId);
-  firm.webhook = {
-    url: document.getElementById('webhook-url-input').value.trim(),
-    email: document.getElementById('webhook-email-input').value.trim(),
-    name: document.getElementById('webhook-name-input').value.trim(),
-  };
-  saveFirms();
-  closeModal('webhook-modal');
-  updateWebhookStatus(firm);
-  showToast('Webhook kaydedildi', 'Görev tamamlandığında n8n tetiklenecek');
-}
-
-async function sendWebhook(firm, task) {
-  const prog = getFirmProgress(firm);
-  const payload = {
-    event: 'task_completed',
-    firm: firm.name,
-    customer_email: firm.webhook.email,
-    customer_name: firm.webhook.name,
-    task_name: task.name,
-    task_tags: task.tags,
-    progress_done: prog.done,
-    progress_total: prog.total,
-    progress_pct: prog.pct,
-    completed_at: new Date().toISOString(),
-  };
-
-  try {
-    await fetch(firm.webhook.url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      mode: 'no-cors'
+function getGs(firm){
+  var gs=[];
+  (firm.mods||[]).forEach(function(m){if(TMPL[m])gs=gs.concat(TMPL[m]);});
+  if((firm.ct||[]).length){
+    var bg={};
+    firm.ct.forEach(function(ct){
+      var gid=ct.gid||"ct-gen";
+      if(!bg[gid])bg[gid]={id:gid,lb:"Özel",c:"#A07DD0",bg:"rgba(160,125,208,.18)",ti:ct.gti||"Özel Görevler",ts:[],isC:true};
+      bg[gid].ts.push({id:ct.id,n:ct.n,nt:ct.nt||"",tg:["ozel"],isC:true});
     });
-    showToast('Bildirim gönderildi', `"${task.name}" tamamlandı bildirimi ${firm.webhook.email} adresine gönderildi`);
-  } catch(e) {
-    showToast('Webhook hatası', 'n8n\'e bağlanılamadı — URL\'i kontrol edin', true);
+    Object.values(bg).forEach(function(g){gs.push(g);});
+  }
+  return gs;
+}
+
+function getProg(firm){
+  var all=getGs(firm).flatMap(function(g){return g.ts;});
+  var done=all.filter(function(t){return firm.tasks[t.id];}).length;
+  return {total:all.length,done:done,pct:all.length?Math.round(done/all.length*100):0};
+}
+
+function renderSB(){
+  var el=document.getElementById("fl");el.innerHTML="";
+  firms.forEach(function(firm){
+    var p=getProg(firm);
+    var b=document.createElement("button");
+    b.className="fb"+(firm.id===aid?" ac":"");
+    var mods=(firm.mods||[]).map(function(m){var mm=MM[m];return mm?'<span class="fmt" style="background:'+mm.bg+';color:'+mm.c+'">'+mm.i+"</span>":"";}).join("");
+    b.innerHTML='<div class="fav">'+firm.name[0].toUpperCase()+'</div><div class="fi"><div class="fn">'+firm.name+'</div><div class="fms">'+mods+'</div></div><div class="fpct">'+p.pct+'%</div><button class="flic" title="Müşteri linki" onclick="event.stopPropagation();copyLink()">🔗</button>';
+    b.onclick=function(){selFirm(firm.id);};
+    el.appendChild(b);
+  });
+}
+
+function selFirm(id){
+  aid=id;fmod="all";ftag="hepsi";
+  var firm=gf(id);
+  renderSB();
+  document.getElementById("pt").textContent=firm.name;
+  document.getElementById("ps").textContent=((firm.mods||[]).map(function(m){return MM[m]?MM[m].l:m;}).join(" + ")||"Özel Proje")+" Projesi";
+  if(!ism)document.getElementById("ta").style.display="flex";
+  document.getElementById("srow").style.display="grid";
+  document.getElementById("pw").style.display="block";
+  document.getElementById("n8nbanner").style.display=firm.wh&&firm.wh.url?"flex":"none";
+  renderMT(firm);renderStats(firm);renderGs(firm);
+}
+
+function renderMT(firm){
+  var el=document.getElementById("modtabs");el.style.display="flex";el.innerHTML="";
+  function mk(lbl,key,cls){
+    var b=document.createElement("button");
+    b.className="mtab"+(fmod===key?" "+cls:"");
+    b.textContent=lbl;
+    b.onclick=function(){fmod=key;renderMT(firm);renderGs(firm);};
+    el.appendChild(b);
+  }
+  mk("Tümü","all","on-all");
+  (firm.mods||[]).forEach(function(m){var mm=MM[m];if(mm)mk(mm.i+" "+mm.l,m,"on-"+m);});
+  if((firm.ct||[]).length)mk("✏️ Özel","oz","on-oz");
+  el.innerHTML+='<div class="msep"></div>';
+  ["hepsi","kritik","teknik","tasarim","icerik","test"].forEach(function(tag){
+    var b=document.createElement("button");
+    b.className="fchip"+(ftag===tag?" on":"");
+    b.textContent=TL[tag]||tag;
+    b.onclick=function(){ftag=tag;renderMT(firm);renderGs(firm);};
+    el.appendChild(b);
+  });
+}
+
+function renderStats(firm){
+  var p=getProg(firm);
+  var all=getGs(firm).flatMap(function(g){return g.ts;});
+  var kr=all.filter(function(t){return t.tg.indexOf("kritik")>-1;});
+  var kd=kr.filter(function(t){return firm.tasks[t.id];}).length;
+  document.getElementById("st").textContent=p.total;
+  document.getElementById("sd").textContent=p.done;
+  document.getElementById("sp").textContent=p.pct+"%";
+  document.getElementById("sll").textContent=p.total-p.done;
+  document.getElementById("skr").textContent=kd+"/"+kr.length+" kritik";
+  document.getElementById("pf").style.width=p.pct+"%";
+}
+
+function renderGs(firm){
+  var w=document.getElementById("gw");w.innerHTML="";
+  var gs=getGs(firm);
+  if(fmod!=="all"){
+    if(fmod==="oz")gs=gs.filter(function(g){return g.isC;});
+    else gs=gs.filter(function(g){return TMPL[fmod]&&TMPL[fmod].some(function(tg){return tg.id===g.id;});});
+  }
+  if(!gs.length){w.innerHTML='<div class="emp"><div class="eic">✅</div><div class="eti">Bu modülde görev yok</div></div>';return;}
+  gs.forEach(function(group){
+    var tasks=group.ts;
+    if(ftag!=="hepsi")tasks=tasks.filter(function(t){return t.tg.indexOf(ftag)>-1;});
+    if(!tasks.length)return;
+    var done=tasks.filter(function(t){return firm.tasks[t.id];}).length;
+    var pct=Math.round(done/tasks.length*100);
+    var gmod="sh";
+    Object.keys(TMPL).forEach(function(m){if(TMPL[m].some(function(g){return g.id===group.id;}))gmod=m;});
+    var mm=MM[gmod]||{i:"✏️",c:"#A07DD0"};
+    var el=document.createElement("div");el.className="grp";
+    var gid2=group.id,gti2=group.ti.replace(/'/g,"\\'");
+    var ab=!ism?'<button class="btn bgh bsm" style="font-size:10px;padding:3px 8px;margin-left:4px" onclick="event.stopPropagation();openCT(\''+gid2+'\',\''+gti2+'\')">+ Görev</button>':"";
+    el.innerHTML='<div class="gh" onclick="togG(\''+group.id+'\')"><span class="glb" style="background:'+group.bg+';color:'+group.c+'">'+group.lb+'</span><span class="gic">'+mm.i+'</span><span class="gti">'+group.ti+'</span><span class="gme">'+done+"/"+tasks.length+"</span>"+ab+'<span class="gcv op" id="gc'+group.id+'">▶</span></div><div class="gpg"><div class="gpf" style="width:'+pct+'%;background:'+group.c+'"></div></div><div class="tlist op" id="tl'+group.id+'">'+tasks.map(function(t){return tH(t,firm);}).join("")+"</div>";
+    w.appendChild(el);
+  });
+}
+
+function tH(t,firm){
+  var done=!!firm.tasks[t.id];
+  var tags=t.tg.map(function(tg){return '<span class="ttg '+(TC[tg]||"")+'">'+( TL[tg]||tg)+"</span>";}).join("");
+  var dl=(!ism&&t.isC)?'<button class="tdel" onclick="event.stopPropagation();delCT(\''+t.id+'\')" title="Sil">✕</button>':"";
+  return '<div class="trow'+(done?" dn":"")+'" onclick="togT(\''+t.id+'\')"><div class="ck'+(done?" on":"")+'"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tbody"><div class="tn">'+t.n+"</div>"+(t.nt?'<div class="tnt">'+t.nt+"</div>":"")+'<div class="ttgs">'+tags+"</div></div>"+dl+"</div>";
+}
+
+function togG(id){
+  var tl=document.getElementById("tl"+id);var ch=document.getElementById("gc"+id);
+  if(tl)tl.classList.toggle("op");if(ch)ch.classList.toggle("op");
+}
+
+function togT(tid){
+  if(ism){toast("Sadece görüntüleme","Bu sayfa bilgilendirme amaçlıdır");return;}
+  var firm=gf(aid);var was=!!firm.tasks[tid];
+  firm.tasks[tid]=!was;sv();renderStats(firm);renderGs(firm);renderSB();
+  if(!was&&firm.wh&&firm.wh.url){
+    var task=getGs(firm).flatMap(function(g){return g.ts;}).find(function(t){return t.id===tid;});
+    if(task)sendWH(firm,task);
   }
 }
 
-// ─── ADD FIRM ────────────────────────────────────────────────────────────────
-
-function openAddFirm() {
-  document.getElementById('new-firm-name').value = '';
-  document.getElementById('add-firm-modal').classList.add('open');
+function openCT(gid,gti){
+  pgid=gid;pgti=gti;
+  document.getElementById("ct-lbl").textContent='"'+gti+'" grubuna özel görev ekle';
+  document.getElementById("ict-name").value="";document.getElementById("ict-note").value="";
+  document.getElementById("modal-ct").classList.add("op");
+  setTimeout(function(){document.getElementById("ict-name").focus();},100);
 }
 
-function addFirm() {
-  const name = document.getElementById('new-firm-name').value.trim();
-  const type = document.getElementById('new-firm-type').value;
-  if (!name) { showToast('Firma adı girin', '', true); return; }
-
-  const id = name.toLowerCase().replace(/[^a-z0-9]/g, '') + Date.now();
-  firms.push({ id, name, type, tasks: {}, webhook: { url:'', email:'', name:'' }, createdAt: new Date().toISOString() });
-  saveFirms();
-  closeModal('add-firm-modal');
-  renderSidebar();
-  selectFirm(id);
-  showToast('Firma oluşturuldu', `${name} için 71 görev hazırlandı`);
+function saveCT(){
+  var n=document.getElementById("ict-name").value.trim();
+  if(!n){toast("Görev adı girin","",true);return;}
+  var firm=gf(aid);if(!firm.ct)firm.ct=[];
+  firm.ct.push({id:"ct"+Date.now(),gid:pgid,gti:pgti,n:n,nt:document.getElementById("ict-note").value.trim()});
+  sv();closeM("modal-ct");
+  var f=gf(aid);renderMT(f);renderGs(f);renderStats(f);renderSB();
+  toast("Görev eklendi",n);
 }
 
-// ─── RESET ───────────────────────────────────────────────────────────────────
-
-function resetFirm() {
-  if (!activeFirmId) return;
-  if (!confirm('Bu firmanın tüm tamamlanan görevleri sıfırlanacak. Emin misiniz?')) return;
-  const firm = getFirm(activeFirmId);
-  firm.tasks = {};
-  saveFirms();
-  renderStats(firm);
-  renderGroups(firm);
-  renderSidebar();
-  showToast('Sıfırlandı', 'Tüm görevler başa alındı');
+function delCT(tid){
+  if(!confirm("Bu özel görevi silmek istiyor musunuz?"))return;
+  var firm=gf(aid);
+  firm.ct=(firm.ct||[]).filter(function(ct){return ct.id!==tid;});
+  delete firm.tasks[tid];sv();
+  renderGs(firm);renderStats(firm);renderSB();toast("Silindi","");
 }
 
-// ─── MODAL ───────────────────────────────────────────────────────────────────
-
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+function togM(m){
+  if(m==="oz"){sm.clear();sm.add("oz");}
+  else{sm.delete("oz");if(sm.has(m))sm.delete(m);else sm.add(m);}
+  ["sh","mt","gg","oz"].forEach(function(k){
+    var card=document.getElementById("mc-"+k);var chk=document.getElementById("mck-"+k);
+    var sel=sm.has(k);
+    var cls={sh:"ssl",mt:"smt",gg:"sgg",oz:"soz"}[k];
+    card.className="mcard"+(sel?" "+cls:"");
+    chk.innerHTML=sel?'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':"";
+    chk.style.cssText=sel?"background:var(--gold);border-color:var(--gold)":"";
+  });
 }
 
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
-
-// ─── TOAST ───────────────────────────────────────────────────────────────────
-
-function showToast(title, msg, isError) {
-  const wrap = document.getElementById('toast-wrap');
-  const t = document.createElement('div');
-  t.className = 'toast' + (isError ? ' error' : '');
-  t.innerHTML = `<div class="toast-title">${title}</div>${msg ? `<div>${msg}</div>` : ''}`;
-  wrap.appendChild(t);
-  setTimeout(() => t.remove(), 4000);
+function openAdd(){
+  sm.clear();
+  ["sh","mt","gg","oz"].forEach(function(m){
+    document.getElementById("mc-"+m).className="mcard";
+    document.getElementById("mck-"+m).innerHTML="";
+    document.getElementById("mck-"+m).style.cssText="";
+  });
+  document.getElementById("ia-name").value="";document.getElementById("ia-email").value="";
+  document.getElementById("modal-add").classList.add("op");
+  setTimeout(function(){document.getElementById("ia-name").focus();},100);
 }
 
-// ─── URL PARAMETRESI & MÜŞTERİ MODU ─────────────────────────────────────────
-
-function getUrlParam(key) {
-  return new URLSearchParams(window.location.search).get(key);
+function addFirm(){
+  var name=document.getElementById("ia-name").value.trim();
+  if(!name){toast("Firma adı girin","",true);return;}
+  if(!sm.size){toast("En az bir modül seçin","",true);return;}
+  var mods=sm.has("oz")?[]:Array.from(sm);
+  var id=slug(name)+"-"+Date.now();
+  firms.push({id:id,name:name,mods:mods,tasks:{},ct:[],wh:{url:"",email:document.getElementById("ia-email").value.trim(),name:""},created:new Date().toISOString()});
+  sv();closeM("modal-add");renderSB();selFirm(id);
+  toast(name+" oluşturuldu",(mods.map(function(m){return MM[m]?MM[m].l:m;}).join(" + ")||"Özel Proje")+" modülleri yüklendi");
 }
 
-function slugify(str) {
-  return str.toLowerCase()
-    .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s')
-    .replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
-    .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+function openWH(){
+  var f=gf(aid);if(!f)return;
+  document.getElementById("iw-url").value=f.wh&&f.wh.url||"";
+  document.getElementById("iw-email").value=f.wh&&f.wh.email||"";
+  document.getElementById("iw-name").value=f.wh&&f.wh.name||"";
+  document.getElementById("modal-wh").classList.add("op");
 }
 
-function copyLink(firmId) {
-  const firm = getFirm(firmId);
-  const slug = slugify(firm.name);
-  const url = `${window.location.origin}${window.location.pathname}?firma=${slug}&musteri=1`;
-  navigator.clipboard.writeText(url).catch(()=>{});
-  showToast('Link kopyalandı!', `${firm.name} müşteri linki panoya kopyalandı`);
+function saveWH(){
+  var f=gf(aid);
+  f.wh={url:document.getElementById("iw-url").value.trim(),email:document.getElementById("iw-email").value.trim(),name:document.getElementById("iw-name").value.trim()};
+  sv();closeM("modal-wh");
+  document.getElementById("n8nbanner").style.display=f.wh.url?"flex":"none";
+  toast("Webhook kaydedildi","Görev tamamlandığında n8n tetiklenecek");
 }
 
-function initFromUrl() {
-  const firmaParam = getUrlParam('firma');
-  const musteriParam = getUrlParam('musteri');
+function sendWH(firm,task){
+  var p=getProg(firm);
+  fetch(firm.wh.url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({event:"task_completed",firm:firm.name,customer_email:firm.wh.email,customer_name:firm.wh.name,task_name:task.n,task_tags:task.tg,progress_done:p.done,progress_total:p.total,progress_pct:p.pct,completed_at:new Date().toISOString()}),mode:"no-cors"}).then(function(){toast("Bildirim gönderildi",'"'+task.n+'"');}).catch(function(){toast("Webhook hatası","n8n'e bağlanılamadı",true);});
+}
 
-  if (firmaParam) {
-    // URL'deki slug ile firma bul
-    const matched = firms.find(f => slugify(f.name) === firmaParam);
-    if (matched) {
-      if (musteriParam === '1') {
-        // MÜŞTERİ MODU — sidebar gizle, sadece o firma
-        document.querySelector('.sidebar').style.display = 'none';
-        document.querySelector('.main').style.flex = '1';
-        document.getElementById('reset-btn').style.display = 'none';
-        document.getElementById('copy-link-btn').style.display = 'none';
-        document.querySelector('.btn-ghost').style.display = 'none';
-        window.__musteriModu = true;
+function resetF(){
+  if(!aid||!confirm("Tüm tamamlanan görevler sıfırlanacak. Emin misiniz?"))return;
+  var f=gf(aid);f.tasks={};sv();renderStats(f);renderGs(f);renderSB();toast("Sıfırlandı","");
+}
 
-        // Müşteri bilgi banner'ı
-        const banner = document.createElement('div');
-        banner.className = 'musteri-banner';
-        banner.innerHTML = `<span>👀</span><div>Bu sayfa <strong>${matched.name}</strong> projenizin ilerleme durumunu göstermektedir. Görevler tamamlandıkça otomatik güncellenir.</div>`;
-        document.querySelector('.topbar').after(banner);
+function copyLink(){
+  if(!aid)return;var f=gf(aid);
+  var url=location.origin+location.pathname+"?firma="+slug(f.name)+"&musteri=1";
+  navigator.clipboard.writeText(url).catch(function(){});
+  toast("Müşteri linki kopyalandı!",url);
+}
+
+function closeM(id){document.getElementById(id).classList.remove("op");}
+document.querySelectorAll(".ov").forEach(function(m){m.addEventListener("click",function(e){if(e.target===m)m.classList.remove("op");});});
+
+function toast(title,msg,err){
+  var w=document.getElementById("tw");var t=document.createElement("div");
+  t.className="tst"+(err?" err":"");
+  t.innerHTML='<div class="tsti">'+title+"</div>"+(msg?"<div>"+msg+"</div>":"");
+  w.appendChild(t);setTimeout(function(){t.remove();},4000);
+}
+
+function init(){
+  var p=new URLSearchParams(location.search);var fp=p.get("firma"),mp=p.get("musteri")==="1";
+  if(fp){
+    var matched=firms.find(function(f){return slug(f.name)===fp;});
+    if(matched){
+      if(mp){
+        ism=true;
+        document.querySelector(".sb").style.display="none";
+        document.getElementById("ta").style.display="none";
+        var b=document.getElementById("mban");b.style.display="flex";
+        document.getElementById("mban-t").innerHTML="Bu sayfa <strong>"+matched.name+"</strong> projenizin anlık ilerleme durumunu göstermektedir.";
       }
-      renderSidebar();
-      selectFirm(matched.id);
-      return;
+      renderSB();selFirm(matched.id);return;
     }
   }
-
-  // Normal mod — ilk firmayı seç
-  renderSidebar();
-  selectFirm(firms[0].id);
+  renderSB();selFirm(firms[0].id);
 }
-
-// Müşteri modunda tikleme engeli
-const _origToggle = toggleTask;
-window.toggleTask = function(taskId) {
-  if (window.__musteriModu) {
-    showToast('Sadece görüntüleme', 'Bu sayfa bilgilendirme amaçlıdır');
-    return;
-  }
-  _origToggle(taskId);
-};
-
-// ─── INIT ────────────────────────────────────────────────────────────────────
-
-initFromUrl();
+init();
 </script>
 </body>
 </html>
