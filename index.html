@@ -586,7 +586,7 @@ async function sendWH(f,task,eventType){
       completed_at:now,
       email_subject:f.name+' — Adım Tamamlandı (%'+p.pct+')',
       email_html:mailHtml('Adım Tamamlandı ✅',''+task.n+' tamamlandı.','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><div style="background:#f0faf5;border:1px solid #c3e8d5;border-radius:12px;padding:20px;margin-bottom:16px"><div style="font-size:11px;color:#4CAF7D;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">✅ Tamamlanan Adım</div><div style="font-size:17px;font-weight:600;color:#2A2A28">'+task.n+'</div></div><p style="color:#555;line-height:1.7;margin:0">'+f.name+' projesi kapsamında bu adım tamamlandı. Çalışmalarımız sürüyor.</p>',p.done,p.total,f.name),
-      email_body:'Merhaba '+(f.wh.name||f.contact||'Sayın Müşterimiz')+',\n\n✅ "'+task.n+'" adımı tamamlandı.\n\nGenel İlerleme: '+p.done+'/'+p.total+' adım (%'+p.pct+')\n\nÇalışmalarımız devam ediyor, sizi bilgilendirmeye devam edeceğiz.'
+      email_body:'Merhaba '+(f.contact||'Sayın Müşterimiz')+',\n\n✅ "'+task.n+'" adımı tamamlandı.\n\nGenel İlerleme: '+p.done+'/'+p.total+' adım (%'+p.pct+')\n\nÇalışmalarımız devam ediyor, sizi bilgilendirmeye devam edeceğiz.'
     };
   } else if(eventType==='project_completed'){
     payload={
@@ -600,7 +600,7 @@ async function sendWH(f,task,eventType){
       completed_at:now,
       email_subject:'🎉 '+f.name+' Projeniz Tamamlandı!',
       email_html:mailHtml('Projeniz Tamamlandı 🎉','Tebrikler! '+f.name+' başarıyla tamamlandı.','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 20px"><strong>'+f.name+'</strong> için <strong>'+mods+'</strong> projesi tamamlandı. Teşekkür ederiz!</p><table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden"><tr><td width="50%" style="background:#f9f6f0;padding:18px 20px;border-right:4px solid #fff"><div style="font-size:11px;color:#888;margin-bottom:4px">Tamamlanan Adım</div><div style="font-size:28px;font-weight:700;color:#B8843A">'+p.total+'</div></td><td width="50%" style="background:#f9f6f0;padding:18px 20px"><div style="font-size:11px;color:#888;margin-bottom:4px">Toplam Çalışma</div><div style="font-size:28px;font-weight:700;color:#B8843A">~'+totalHours+' saat</div></td></tr><tr><td colspan="2" style="background:#f0faf5;padding:14px 20px;border-top:4px solid #fff"><div style="font-size:12px;color:#888;margin-bottom:4px">Modüller</div><div style="font-size:14px;font-weight:600;color:#2A2A28">'+mods+'</div></td></tr></table>',p.total,p.total,f.name),
-      email_body:'Merhaba '+(f.wh.name||f.contact||'Sayın Müşterimiz')+',\n\n🎉 '+f.name+' için '+mods+' kurulum projesi başarıyla tamamlandı!\n\n📋 Özet:\n• Tamamlanan Adım: '+p.total+' / '+p.total+'\n• Toplam Çalışma: ~'+totalHours+' saat\n• Modüller: '+mods+'\n\nHer şey için teşekkür ederiz!'
+      email_body:'Merhaba '+(f.contact||'Sayın Müşterimiz')+',\n\n🎉 '+f.name+' için '+mods+' kurulum projesi başarıyla tamamlandı!\n\n📋 Özet:\n• Tamamlanan Adım: '+p.total+' / '+p.total+'\n• Toplam Çalışma: ~'+totalHours+' saat\n• Modüller: '+mods+'\n\nHer şey için teşekkür ederiz!'
     };
   }
   const whUrl=settings.whUrl||'';
