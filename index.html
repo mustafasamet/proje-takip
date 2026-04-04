@@ -127,6 +127,23 @@
   }
   .firm-btn.active .firm-pct { color: var(--gold); }
 
+  .firm-link-btn {
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    color: var(--text3);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: all .15s;
+    padding: 0;
+  }
+  .firm-btn:hover .firm-link-btn { opacity: 1; }
+  .firm-link-btn:hover { background: var(--dark4); color: var(--gold) !important; }
+
   .add-firm-btn {
     width: calc(100% - 24px);
     margin: 4px 12px 12px;
@@ -436,6 +453,20 @@
   .n8n-text { flex: 1; line-height: 1.5; }
   .n8n-text strong { color: var(--gold); }
 
+  .musteri-banner {
+    margin: 16px 28px 0;
+    background: rgba(76,175,125,0.08);
+    border: 1px solid rgba(76,175,125,0.2);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+  .musteri-banner strong { color: var(--success); }
+
   @media (max-width: 768px) {
     .layout { flex-direction: column; }
     .sidebar { width: 100%; height: auto; position: static; }
@@ -470,6 +501,9 @@
         <div class="page-sub" id="main-sub">Sol panelden bir firma seçin</div>
       </div>
       <div class="topbar-actions">
+        <button class="btn btn-ghost" onclick="activeFirmId && copyLink(activeFirmId)" id="copy-link-btn" style="display:none">
+          🔗 Müşteri Linki
+        </button>
         <button class="btn btn-ghost" onclick="openWebhookModal()">
           ⚙ n8n Webhook
         </button>
@@ -742,7 +776,8 @@ function renderSidebar() {
         <div class="firm-name">${firm.name}</div>
         <div class="firm-prog">${prog.done}/${prog.total} görev</div>
       </div>
-      <div class="firm-pct">${prog.pct}%</div>`;
+      <div class="firm-pct">${prog.pct}%</div>
+      <button class="firm-link-btn" title="Müşteri linki kopyala" onclick="event.stopPropagation();copyLink('${firm.id}')">🔗</button>`;
     btn.onclick = () => selectFirm(firm.id);
     list.appendChild(btn);
   });
@@ -760,6 +795,7 @@ function selectFirm(id) {
   document.getElementById('prog-wrap').style.display = 'block';
   document.getElementById('filter-bar').style.display = 'flex';
   document.getElementById('reset-btn').style.display = 'flex';
+  document.getElementById('copy-link-btn').style.display = 'flex';
   updateWebhookStatus(firm);
   renderStats(firm);
   renderGroups(firm);
@@ -988,10 +1024,74 @@ function showToast(title, msg, isError) {
   setTimeout(() => t.remove(), 4000);
 }
 
+// ─── URL PARAMETRESI & MÜŞTERİ MODU ─────────────────────────────────────────
+
+function getUrlParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+function slugify(str) {
+  return str.toLowerCase()
+    .replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ş/g,'s')
+    .replace(/ı/g,'i').replace(/ö/g,'o').replace(/ç/g,'c')
+    .replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');
+}
+
+function copyLink(firmId) {
+  const firm = getFirm(firmId);
+  const slug = slugify(firm.name);
+  const url = `${window.location.origin}${window.location.pathname}?firma=${slug}&musteri=1`;
+  navigator.clipboard.writeText(url).catch(()=>{});
+  showToast('Link kopyalandı!', `${firm.name} müşteri linki panoya kopyalandı`);
+}
+
+function initFromUrl() {
+  const firmaParam = getUrlParam('firma');
+  const musteriParam = getUrlParam('musteri');
+
+  if (firmaParam) {
+    // URL'deki slug ile firma bul
+    const matched = firms.find(f => slugify(f.name) === firmaParam);
+    if (matched) {
+      if (musteriParam === '1') {
+        // MÜŞTERİ MODU — sidebar gizle, sadece o firma
+        document.querySelector('.sidebar').style.display = 'none';
+        document.querySelector('.main').style.flex = '1';
+        document.getElementById('reset-btn').style.display = 'none';
+        document.getElementById('copy-link-btn').style.display = 'none';
+        document.querySelector('.btn-ghost').style.display = 'none';
+        window.__musteriModu = true;
+
+        // Müşteri bilgi banner'ı
+        const banner = document.createElement('div');
+        banner.className = 'musteri-banner';
+        banner.innerHTML = `<span>👀</span><div>Bu sayfa <strong>${matched.name}</strong> projenizin ilerleme durumunu göstermektedir. Görevler tamamlandıkça otomatik güncellenir.</div>`;
+        document.querySelector('.topbar').after(banner);
+      }
+      renderSidebar();
+      selectFirm(matched.id);
+      return;
+    }
+  }
+
+  // Normal mod — ilk firmayı seç
+  renderSidebar();
+  selectFirm(firms[0].id);
+}
+
+// Müşteri modunda tikleme engeli
+const _origToggle = toggleTask;
+window.toggleTask = function(taskId) {
+  if (window.__musteriModu) {
+    showToast('Sadece görüntüleme', 'Bu sayfa bilgilendirme amaçlıdır');
+    return;
+  }
+  _origToggle(taskId);
+};
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 
-renderSidebar();
-selectFirm(firms[0].id);
+initFromUrl();
 </script>
 </body>
 </html>
