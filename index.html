@@ -332,30 +332,33 @@ async function dbDeleteFirm(id){
   const {error} = await sb.from('firms').delete().eq('id',id);
   if(error)console.error('firm silme hatası:',error);
 }
-async function dbLoadFormData(firmName){
-  // Önce brand adına göre ara
-  let {data,error} = await sb.from('form_submissions')
-    .select('*')
-    .or('brand.ilike.%'+firmName+'%,firm_name.ilike.%'+firmName+'%,email.ilike.%'+firmName+'%')
+async function dbLoadAllSubmissions(){
+  const {data,error} = await sb.from('form_submissions')
+    .select('id,brand,name,email,firm_id,submitted_at,data')
     .order('submitted_at',{ascending:false})
-    .limit(1);
-  if(error){console.error('form data hatası:',error);}
-  if(data && data.length) return data[0];
-  // Bulamazsa tüm submissions'ı getir - manuel eşleştir
-  const {data:all} = await sb.from('form_submissions')
-    .select('*')
-    .order('submitted_at',{ascending:false})
-    .limit(20);
-  if(!all||!all.length) return null;
-  // En son kaydı döndür (geçici - firma eşleştirme için)
-  const fn = firmName.toLowerCase();
-  const match = all.find(r=>{
-    const b=(r.brand||'').toLowerCase();
-    const d=(r.data&&r.data.brand||'').toLowerCase();
-    const w=(r.data&&r.data.website||'').toLowerCase();
-    return b.includes(fn)||fn.includes(b)||d.includes(fn)||fn.includes(d)||w.includes(fn)||fn.includes(w);
-  });
-  return match || null;
+    .limit(50);
+  if(error){console.error('submissions hatası:',error);return [];}
+  return data||[];
+}
+async function dbLoadFormById(subId){
+  const {data,error} = await sb.from('form_submissions')
+    .select('*').eq('id',subId).single();
+  if(error) return null;
+  return data;
+}
+async function dbLinkFormToFirm(subId,firmId){
+  const {error} = await sb.from('form_submissions')
+    .update({firm_id:firmId}).eq('id',subId);
+  if(error){console.error('link hatası:',error);return false;}
+  return true;
+}
+async function dbLoadFormForFirm(firmId){
+  // Önce firm_id ile eşleşen kayıt ara
+  const {data,error} = await sb.from('form_submissions')
+    .select('*').eq('firm_id',firmId)
+    .order('submitted_at',{ascending:false}).limit(1);
+  if(!error && data && data.length) return data[0];
+  return null;
 }
 async function dbLoadSettings(){
   const {data,error} = await sb.from('app_settings').select('*').eq('id','global').single();
@@ -675,13 +678,65 @@ async function openFormData(){
   document.getElementById('fd-subtitle').textContent='Sametsalik.com reklam detay formu';
   document.getElementById('fd-content').innerHTML='<div class="fd-empty">⏳ Yükleniyor...</div>';
   document.getElementById('m-formdata').classList.add('op');
-  const fd = await dbLoadFormData(f.name);
-  renderFormData(fd);
+  // Önce bu firmaya bağlı form var mı bak
+  const linked = await dbLoadFormForFirm(f.id);
+  if(linked){
+    renderFormData(linked);
+  } else {
+    // Bağlı form yok — tüm formları listele, manuel seç
+    const all = await dbLoadAllSubmissions();
+    renderFormSelector(all);
+  }
+}
+async function linkFormToFirm(subId){
+  const f=gf(aid);if(!f)return;
+  const ok = await dbLinkFormToFirm(subId, f.id);
+  if(ok){
+    toast('Form bağlandı','Bu firma ile eşleştirildi ✅');
+    const fd = await dbLoadFormById(subId);
+    renderFormData(fd);
+  } else {
+    toast('Hata','Form bağlanamadı',true);
+  }
+}
+function renderFormSelector(submissions){
+  const el=document.getElementById('fd-content');
+  if(!submissions.length){
+    el.innerHTML='<div class="fd-empty">📭 Henüz hiç form verisi yok.<br><span style="font-size:11px;margin-top:6px;display:block">Müşteri formu doldurunca burada görünür.</span></div>';
+    return;
+  }
+  let html='<div style="font-size:12px;color:var(--tx3);margin-bottom:12px">Bu firmaya hangi form bağlı değil. Aşağıdan seç:</div>';
+  html+='<div style="display:flex;flex-direction:column;gap:8px">';
+  submissions.forEach(s=>{
+    const d = s.data&&s.data.body ? s.data.body : (s.data||{});
+    const brand = s.brand||d.brand||'—';
+    const name = s.name||d.name||'—';
+    const email = s.email||d.email||'—';
+    const date = s.submitted_at ? new Date(s.submitted_at).toLocaleString('tr-TR') : '';
+    const linked = s.firm_id ? ' <span style="font-size:10px;color:var(--gold)">● Başka firmaya bağlı</span>' : '';
+    html+=`<div style="background:var(--d3);border:1px solid var(--bd2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s" onclick="linkFormToFirm(${s.id})" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--bd2)'">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600;color:var(--tx)">${brand}${linked}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:2px">${name} · ${email}</div>
+        <div style="font-size:10px;color:var(--tx3);margin-top:2px">📅 ${date}</div>
+      </div>
+      <button style="padding:6px 14px;border-radius:8px;border:1px solid rgba(184,132,58,.4);background:var(--gbg);color:var(--gold);font-size:12px;cursor:pointer;white-space:nowrap">Bağla</button>
+    </div>`;
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+async function unlinkForm(subId){
+  const f=gf(aid);if(!f)return;
+  await sb.from('form_submissions').update({firm_id:null}).eq('id',subId);
+  toast('Bağlantı kaldırıldı','');
+  const all = await dbLoadAllSubmissions();
+  renderFormSelector(all);
 }
 function renderFormData(fd){
   const el=document.getElementById('fd-content');
   if(!fd){
-    el.innerHTML='<div class="fd-empty">📭 Bu firma için henüz form verisi yok.<br><span style="font-size:11px;margin-top:6px;display:block">Müşteri formu doldurunca burada görünür.</span></div>';
+    el.innerHTML='<div class="fd-empty">📭 Bu firma için henüz form verisi yok.</div>';
     return;
   }
   // data string ise parse et
@@ -725,7 +780,7 @@ function renderFormData(fd){
       {k:'avg_revenue',l:'Ortalama Gelir'},{k:'prev_ads',l:'Önceki Reklam'},
       {k:'prev_result',l:'Önceki Sonuç',full:true},{k:'note',l:'Diğer Notlar',full:true}
     ])+
-    (date?`<div class="fd-date">📅 Form gönderim tarihi: ${date}</div>`:'');
+    (date?`<div class="fd-date" style="display:flex;align-items:center;justify-content:space-between"><span>📅 Form gönderim tarihi: ${date}</span><button onclick="unlinkForm(${fd.id})" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--d3);color:var(--tx3);cursor:pointer">↩ Bağlantıyı Kaldır</button></div>`:'');
 }
 async function testWebhook(){
   const url=document.getElementById('s-wh-url').value.trim();
