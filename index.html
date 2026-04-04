@@ -237,19 +237,27 @@ async function dbLoadFirms(){
   if(error){console.error('firms yüklenemedi:',error);return [];}
   return data.map(r=>({
     id:r.id, name:r.name, mods:r.mods||[], tasks:r.tasks||{},
-    ct:r.ct||[], contact:r.contact||'', phone:r.phone||'',
+    ct:r.ct||[],
+    contact:r.contact||'', phone:r.phone||'',
     email:r.email||'', whEnabled:r.wh_enabled!==false,
     created:r.created_at, startedAt:r.started_at||null
   }));
 }
 async function dbSaveFirm(f){
   const {error} = await sb.from('firms').upsert({
-    id:f.id, name:f.name, mods:f.mods, tasks:f.tasks,
-    ct:f.ct||[], contact:f.contact||'', phone:f.phone||'',
-    email:f.email||'', wh_enabled:f.whEnabled!==false,
-    started_at:f.startedAt||null, updated_at:new Date().toISOString()
-  });
-  if(error)console.error('firm kayıt hatası:',error);
+    id:f.id,
+    name:f.name,
+    mods:f.mods||[],
+    tasks:f.tasks||{},
+    ct:f.ct||[],
+    contact:f.contact||'',
+    phone:f.phone||'',
+    email:f.email||'',
+    wh_enabled:f.whEnabled!==false,
+    started_at:f.startedAt||null,
+    updated_at:new Date().toISOString()
+  },{onConflict:'id'});
+  if(error){console.error('firm kayıt hatası:',error.message,error.details);}
 }
 async function dbDeleteFirm(id){
   const {error} = await sb.from('firms').delete().eq('id',id);
