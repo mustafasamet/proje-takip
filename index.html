@@ -110,6 +110,15 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 .wh-status{font-size:10px;padding:0 6px;margin-top:4px;display:flex;align-items:center;gap:5px;color:var(--tx3)}
 .wh-dot{width:6px;height:6px;border-radius:50%;background:var(--tx3);flex-shrink:0}
 .wh-dot.on{background:var(--gr);box-shadow:0 0 4px var(--gr)}
+.whswitch{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:8px;border:1px solid var(--bd2);background:var(--d3);cursor:pointer;user-select:none;transition:all .15s}
+.whswitch:hover{border-color:var(--bd2);background:var(--d4)}
+.whswitch.on{border-color:rgba(76,175,125,.4);background:rgba(76,175,125,.08)}
+.whtoggle{width:32px;height:18px;border-radius:99px;background:var(--d5);position:relative;transition:background .2s;flex-shrink:0}
+.whtoggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.whswitch.on .whtoggle{background:var(--gr)}
+.whswitch.on .whtoggle::after{transform:translateX(14px)}
+.whlbl{font-size:11px;font-weight:500;color:var(--tx3)}
+.whswitch.on .whlbl{color:var(--gr)}
 .toastwrap{position:fixed;bottom:20px;right:20px;z-index:200;display:flex;flex-direction:column;gap:6px}
 .toast{background:var(--d2);border:1px solid var(--bd2);border-left:3px solid var(--gr);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--tx2);max-width:290px;animation:tIn .2s ease;box-shadow:0 4px 20px rgba(0,0,0,.4)}
 .toast.err{border-left-color:var(--rd)}.ttit{font-weight:600;color:var(--tx);margin-bottom:2px;font-size:13px}
@@ -132,6 +141,10 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   <div class="topb">
     <div><div class="pt" id="pt">Firma Seç</div><div class="ps" id="ps">Sol panelden bir firma seçin</div></div>
     <div class="tacts" id="ta" style="display:none">
+      <div class="whswitch" id="wh-toggle" onclick="togWHSwitch()" title="Müşteri bildirimleri">
+        <div class="whtoggle"></div>
+        <span class="whlbl" id="wh-lbl">Bildirim Kapalı</span>
+      </div>
       <button class="btn bgh bsm" onclick="copyLink()">🔗 Müşteri Linki</button>
       <button class="btn bgh bsm" onclick="resetF()">↺ Sıfırla</button>
     </div>
@@ -155,7 +168,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 <div class="md">
   <div class="mdtit">Yeni Firma Ekle</div>
   <div class="mdsub">Hizmet modüllerini seçin — her birinin checklist'i otomatik oluşturulur. Birden fazla seçebilirsiniz.</div>
-  <div class="mf"><div class="ml">Firma Adı</div><input class="mi" id="i-name" placeholder="Örn: Goldfalez" /></div>
+  <div class="mf"><div class="ml">Firma Adı</div><input class="mi" id="i-name" placeholder="Örn: ABC Mağazacılık" /></div>
   <div class="mf"><div class="ml">Modüller — birden fazla seçebilirsin</div>
     <div class="mgrid">
       <div class="mc" id="mc-sh" onclick="togM('sh')"><div class="mcic">🛍</div><div><div class="mctit">Shopify</div><div class="mcsub">E-ticaret kurulumu</div></div><div class="mcck" id="mck-sh"></div></div>
@@ -202,6 +215,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   <div class="mf"><div class="ml">E-posta</div><input class="mi" id="edit-email" placeholder="ahmet@firma.com" /></div>
   <div class="macts"><button class="btn bgh" onclick="closeM('m-edit')">İptal</button><button class="btn bgold" onclick="saveEdit()">Kaydet</button></div>
 </div></div>
+<div class="ov" id="m-ct">
 <div class="md" style="max-width:420px">
   <div class="mdtit">Özel Görev Ekle</div>
   <div class="mdsub" id="ct-lbl"></div>
@@ -345,7 +359,8 @@ const TL={shopify:'Shopify',meta:'Meta',google:'Google',teknik:'Teknik',kritik:'
 let firms=JSON.parse(localStorage.getItem('ajans_v5')||'[]');
 let settings=JSON.parse(localStorage.getItem('ajans_settings')||'{}');
 let aid=null,fm='all',ftg='hepsi',pgid=null,pgti='',sm=new Set(),ism=false;
-if(!firms.length){firms=[{id:'goldfalez',name:'Goldfalez',mods:['sh'],tasks:{},ct:[],created:new Date().toISOString()}];sv();}
+// Eğer sadece örnek Goldfalez firması varsa temizle
+if(firms.length===1&&firms[0].id==='goldfalez'){firms=[];sv();}
 function svSettings(){localStorage.setItem('ajans_settings',JSON.stringify(settings));}
 function sv(){localStorage.setItem('ajans_v5',JSON.stringify(firms));}
 function gf(id){return firms.find(f=>f.id===id);}
@@ -377,6 +392,7 @@ function selF(id){
   if(!ism)document.getElementById('ta').style.display='flex';
   document.getElementById('stats').style.display='grid';document.getElementById('pw').style.display='block';
   renderInfoCards(f);
+  updateWHToggle(f);
   renderMT(f);renderSt(f);renderGs(f);
 }
 function renderInfoCards(f){
@@ -631,6 +647,7 @@ async function sendWH(f,task,eventType){
   }
   const whUrl=settings.whUrl||'';
   if(!whUrl)return;
+  if(f.whEnabled===false)return; // firma bazlı bildirim kapalı
   try{
     const ctrl=new AbortController();
     setTimeout(()=>ctrl.abort(),10000);
@@ -642,6 +659,21 @@ async function sendWH(f,task,eventType){
     else if(eventType==='task_completed')toast('📧 Adım bildirimi gönderildi',task.n);
     else if(eventType==='project_completed')toast('📧 Proje tamamlama özeti gönderildi','');
   }catch(e){toast('Webhook hatası','',true);}
+}
+function togWHSwitch(){
+  const f=gf(aid);if(!f)return;
+  f.whEnabled = f.whEnabled===false ? true : false;
+  sv();
+  updateWHToggle(f);
+  toast(f.whEnabled ? '🔔 Müşteri bildirimleri açık' : '🔕 Müşteri bildirimleri kapalı', f.name);
+}
+function updateWHToggle(f){
+  const sw=document.getElementById('wh-toggle');
+  const lbl=document.getElementById('wh-lbl');
+  if(!sw)return;
+  const on = f.whEnabled !== false; // default true
+  sw.classList.toggle('on', on);
+  lbl.textContent = on ? 'Bildirim Açık' : 'Bildirim Kapalı';
 }
 function openEdit(){
   const f=gf(aid);if(!f)return;
@@ -694,7 +726,7 @@ function toast(title,msg,err){const w=document.getElementById('tw');const t=docu
 function init(){
   const p=new URLSearchParams(location.search);const fp=p.get('firma'),mp=p.get('musteri')==='1';
   if(fp){const m=firms.find(f=>slug(f.name)===fp);if(m){if(mp){ism=true;document.querySelector('.sb').style.display='none';document.getElementById('ta').style.display='none';const b=document.getElementById('mban');b.style.display='flex';document.getElementById('mbantxt').innerHTML='Bu sayfa <strong>'+m.name+'</strong> projenizin anlık durumunu göstermektedir.';}renderSB();selF(m.id);return;}}
-  renderSB();selF(firms[0].id);
+  renderSB();if(firms.length>0)selF(firms[0].id);
 }
 
 init();
