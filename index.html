@@ -684,9 +684,11 @@ function renderFormData(fd){
     el.innerHTML='<div class="fd-empty">📭 Bu firma için henüz form verisi yok.<br><span style="font-size:11px;margin-top:6px;display:block">Müşteri formu doldurunca burada görünür.</span></div>';
     return;
   }
-  // data string ise parse et, object ise direkt kullan
+  // data string ise parse et
   let d = fd.data || {};
   if(typeof d === 'string'){try{d=JSON.parse(d);}catch(e){d={};}}
+  // n8n body wrapper varsa aç
+  if(d.body && typeof d.body === 'object') d = d.body;
   // data boşsa direkt fd'den al
   if(!Object.keys(d).length) d = fd;
   const date=fd.submitted_at?new Date(fd.submitted_at).toLocaleString('tr-TR'):'';
