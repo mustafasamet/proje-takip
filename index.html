@@ -133,7 +133,6 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
     <div><div class="pt" id="pt">Firma Seç</div><div class="ps" id="ps">Sol panelden bir firma seçin</div></div>
     <div class="tacts" id="ta" style="display:none">
       <button class="btn bgh bsm" onclick="copyLink()">🔗 Müşteri Linki</button>
-      <button class="btn bgh bsm" onclick="openSettings()">⚙ n8n</button>
       <button class="btn bgh bsm" onclick="resetF()">↺ Sıfırla</button>
     </div>
   </div>
@@ -146,7 +145,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
     <div class="sc"><div class="slbl">Kalan</div><div class="sval" id="sl">—</div><div class="ssub" id="scr">—</div></div>
   </div>
   <div id="pw" class="pw" style="display:none"><div class="pf" id="pf" style="width:0%"></div></div>
-  <div id="nb" class="nbanner" style="display:none"><span>🔗</span><div><strong>n8n aktif</strong> — Proje oluşturulduğunda, her adım tamamlandığında ve proje bittiğinde müşteriye otomatik mail gider.</div><button class="btn bgh bsm" onclick="openSettings()" style="margin-left:auto">Düzenle</button></div>
+  <div id="nb" style="display:none"></div>
   <div class="mtabs" id="mtabs" style="display:none"></div>
   <div class="gw" id="gw"><div class="empty"><div class="eico">🏗</div><div class="etit">Firma seçilmedi</div><div>Sol panelden seçin veya yeni ekleyin</div></div></div>
 </div>
@@ -377,7 +376,6 @@ function selF(id){
   document.getElementById('ps').textContent=(f.mods||[]).map(m=>MM[m]?.l||m).join(' + ')||'Özel Proje';
   if(!ism)document.getElementById('ta').style.display='flex';
   document.getElementById('stats').style.display='grid';document.getElementById('pw').style.display='block';
-  document.getElementById('nb').style.display=settings.whUrl?'flex':'none';
   renderInfoCards(f);
   renderMT(f);renderSt(f);renderGs(f);
 }
@@ -534,7 +532,6 @@ function saveSettings(){
   closeM('m-settings');
   updateWHStatus();
   // Aktif firma varsa n8n banner güncelle
-  if(aid){const f=gf(aid);document.getElementById('nb').style.display=settings.whUrl?'flex':'none';}
   toast('Ayarlar kaydedildi', settings.whUrl ? '✅ Webhook aktif' : 'Webhook URL girilmedi');
 }
 function updateWHStatus(){
@@ -548,6 +545,11 @@ function updateWHStatus(){
     el.innerHTML='<div class="wh-dot"></div><span>Webhook kurulmadı</span>';
     el.style.color='var(--tx3)';
   }
+}
+function mailHtml(title,pre,body,done,total,firm){
+  var pct=total?Math.round(done/total*100):0;
+  var bar=total?'<div style="margin:24px 0 8px"><div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:6px"><span>İlerleme</span><span>'+done+'/'+total+' adım · %'+pct+'</span></div><div style="background:#f0f0f0;border-radius:99px;height:8px;overflow:hidden"><div style="background:linear-gradient(90deg,#8A6128,#B8843A);height:100%;width:'+pct+'%;border-radius:99px"></div></div></div>':'';
+  return '<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>'+title+'</title></head><body style="margin:0;padding:0;background:#f4f1ec;font-family:Segoe UI,Arial,sans-serif"><div style="display:none;max-height:0;overflow:hidden;color:#f4f1ec">'+pre+'</div><table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ec;padding:32px 16px"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px"><tr><td style="background:linear-gradient(135deg,#2A2A28 0%,#3E3E3C 100%);border-radius:16px 16px 0 0;padding:32px 36px;text-align:center"><div style="font-size:11px;letter-spacing:3px;color:#B8843A;text-transform:uppercase;margin-bottom:8px">Ajans Paneli</div><div style="font-size:22px;font-weight:700;color:#fff;line-height:1.3">'+title+'</div><div style="width:40px;height:2px;background:#B8843A;margin:16px auto 0;border-radius:99px"></div></td></tr><tr><td style="background:#fff;padding:32px 36px">'+body+bar+'</td></tr><tr><td style="background:#2A2A28;border-radius:0 0 16px 16px;padding:20px 36px;text-align:center"><div style="font-size:11px;color:#5A5652;line-height:1.7">Bu e-posta <strong style="color:#B8843A">'+firm+'</strong> projesi kapsamında otomatik gönderilmiştir.</div></td></tr></table></td></tr></table></body></html>';
 }
 async function sendWH(f,task,eventType){
   const p=getProg(f);
@@ -566,7 +568,8 @@ async function sendWH(f,task,eventType){
       modules:mods,
       total_tasks:p.total,
       created_at:now,
-      email_subject:f.name+' Projeniz Başladı',
+      email_subject:f.name+' — Projeniz Başladı',
+      email_html:mailHtml(f.name+' Projeniz Başladı 🚀','Projeniz başlatıldı.','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 20px">'+f.name+' için <strong>'+mods+'</strong> kurulum projeniz başlatıldı.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;border-radius:12px;padding:20px"><tr><td style="font-size:12px;color:#888;padding-bottom:4px">Hizmet Modülleri</td></tr><tr><td style="font-size:16px;font-weight:600;color:#2A2A28">'+mods+'</td></tr><tr><td style="padding-top:16px;font-size:12px;color:#888;padding-bottom:4px">Toplam Adım</td></tr><tr><td style="font-size:28px;font-weight:700;color:#B8843A">'+p.total+' adım</td></tr></table>',0,0,f.name),
       email_body:'Merhaba '+(f.contact||'Sayın Müşterimiz')+',\n\n'+f.name+' için '+mods+' kurulum projeniz başlatıldı.\nToplam '+p.total+' adım tamamlanacak.\nProje ilerlemenizi sizinle paylaşmaya devam edeceğiz.\n\nİyi çalışmalar!'
     };
   } else if(eventType==='task_completed'){
@@ -582,6 +585,7 @@ async function sendWH(f,task,eventType){
       progress_pct:p.pct,
       completed_at:now,
       email_subject:f.name+' — Adım Tamamlandı (%'+p.pct+')',
+      email_html:mailHtml('Adım Tamamlandı ✅',''+task.n+' tamamlandı.','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><div style="background:#f0faf5;border:1px solid #c3e8d5;border-radius:12px;padding:20px;margin-bottom:16px"><div style="font-size:11px;color:#4CAF7D;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">✅ Tamamlanan Adım</div><div style="font-size:17px;font-weight:600;color:#2A2A28">'+task.n+'</div></div><p style="color:#555;line-height:1.7;margin:0">'+f.name+' projesi kapsamında bu adım tamamlandı. Çalışmalarımız sürüyor.</p>',p.done,p.total,f.name),
       email_body:'Merhaba '+(f.wh.name||f.contact||'Sayın Müşterimiz')+',\n\n✅ "'+task.n+'" adımı tamamlandı.\n\nGenel İlerleme: '+p.done+'/'+p.total+' adım (%'+p.pct+')\n\nÇalışmalarımız devam ediyor, sizi bilgilendirmeye devam edeceğiz.'
     };
   } else if(eventType==='project_completed'){
@@ -595,6 +599,7 @@ async function sendWH(f,task,eventType){
       modules:mods,
       completed_at:now,
       email_subject:'🎉 '+f.name+' Projeniz Tamamlandı!',
+      email_html:mailHtml('Projeniz Tamamlandı 🎉','Tebrikler! '+f.name+' başarıyla tamamlandı.','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 20px"><strong>'+f.name+'</strong> için <strong>'+mods+'</strong> projesi tamamlandı. Teşekkür ederiz!</p><table width="100%" cellpadding="0" cellspacing="0" style="border-radius:12px;overflow:hidden"><tr><td width="50%" style="background:#f9f6f0;padding:18px 20px;border-right:4px solid #fff"><div style="font-size:11px;color:#888;margin-bottom:4px">Tamamlanan Adım</div><div style="font-size:28px;font-weight:700;color:#B8843A">'+p.total+'</div></td><td width="50%" style="background:#f9f6f0;padding:18px 20px"><div style="font-size:11px;color:#888;margin-bottom:4px">Toplam Çalışma</div><div style="font-size:28px;font-weight:700;color:#B8843A">~'+totalHours+' saat</div></td></tr><tr><td colspan="2" style="background:#f0faf5;padding:14px 20px;border-top:4px solid #fff"><div style="font-size:12px;color:#888;margin-bottom:4px">Modüller</div><div style="font-size:14px;font-weight:600;color:#2A2A28">'+mods+'</div></td></tr></table>',p.total,p.total,f.name),
       email_body:'Merhaba '+(f.wh.name||f.contact||'Sayın Müşterimiz')+',\n\n🎉 '+f.name+' için '+mods+' kurulum projesi başarıyla tamamlandı!\n\n📋 Özet:\n• Tamamlanan Adım: '+p.total+' / '+p.total+'\n• Toplam Çalışma: ~'+totalHours+' saat\n• Modüller: '+mods+'\n\nHer şey için teşekkür ederiz!'
     };
   }
