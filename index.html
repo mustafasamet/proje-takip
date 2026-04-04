@@ -332,15 +332,30 @@ async function dbDeleteFirm(id){
   const {error} = await sb.from('firms').delete().eq('id',id);
   if(error)console.error('firm silme hatası:',error);
 }
-async function dbLoadFormData(brandName){
-  // brand adına göre en son form verisini getir
-  const {data,error} = await sb.from('form_submissions')
+async function dbLoadFormData(firmName){
+  // Önce brand adına göre ara
+  let {data,error} = await sb.from('form_submissions')
     .select('*')
-    .ilike('brand', '%'+brandName+'%')
+    .or('brand.ilike.%'+firmName+'%,firm_name.ilike.%'+firmName+'%,email.ilike.%'+firmName+'%')
     .order('submitted_at',{ascending:false})
     .limit(1);
-  if(error){console.error('form data hatası:',error);return null;}
-  return data && data.length ? data[0] : null;
+  if(error){console.error('form data hatası:',error);}
+  if(data && data.length) return data[0];
+  // Bulamazsa tüm submissions'ı getir - manuel eşleştir
+  const {data:all} = await sb.from('form_submissions')
+    .select('*')
+    .order('submitted_at',{ascending:false})
+    .limit(20);
+  if(!all||!all.length) return null;
+  // En son kaydı döndür (geçici - firma eşleştirme için)
+  const fn = firmName.toLowerCase();
+  const match = all.find(r=>{
+    const b=(r.brand||'').toLowerCase();
+    const d=(r.data&&r.data.brand||'').toLowerCase();
+    const w=(r.data&&r.data.website||'').toLowerCase();
+    return b.includes(fn)||fn.includes(b)||d.includes(fn)||fn.includes(d)||w.includes(fn)||fn.includes(w);
+  });
+  return match || null;
 }
 async function dbLoadSettings(){
   const {data,error} = await sb.from('app_settings').select('*').eq('id','global').single();
