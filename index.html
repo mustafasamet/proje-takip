@@ -1255,17 +1255,17 @@ async function init(){
   const p=new URLSearchParams(location.search);const fp=p.get('firma'),mp=p.get('musteri')==='1';
   if(fp){const m=firms.find(f=>slug(f.name)===fp);if(m){if(mp){ism=true;document.querySelector('.sb').style.display='none';document.getElementById('ta').style.display='none';const b=document.getElementById('mban');b.style.display='flex';document.getElementById('mbantxt').innerHTML='Bu sayfa <strong>'+m.name+'</strong> projenizin anlık durumunu göstermektedir.';}renderSB();selF(m.id);return;}}
   renderSB();if(firms.length>0)selF(firms[0].id);else showEmpty();
+  updateWHStatus();
 }
 
 // Sayfa açılınca session kontrolü
 if(checkSession()){
   document.getElementById('loginpage').style.display='none';
   document.getElementById('mainapp').style.display='flex';
-  init();
+  init().then(()=>updateWHStatus());
 } else {
   document.getElementById('l-user').focus();
 }
-updateWHStatus();
 </script>
 </body>
 </html>
