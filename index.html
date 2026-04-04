@@ -8,6 +8,22 @@
 :root{--gold:#B8843A;--gd:#8A6128;--gbg:rgba(184,132,58,.12);--dark:#1A1A18;--d2:#222220;--d3:#2A2A28;--d4:#343432;--tx:#E8E4DC;--tx2:#9A9690;--tx3:#5A5652;--bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.12);--gr:#4CAF7D;--grbg:rgba(76,175,125,.1);--bl:#6495ED;--blbg:rgba(100,149,237,.1);--rd:#E05555;--rdbg:rgba(224,85,85,.1);--pu:#A07DD0;--pubg:rgba(160,125,208,.1)}
 *{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;font-size:14px}
+.loginpage{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px}
+.loginbox{background:var(--d2);border:1px solid var(--bd2);border-radius:20px;padding:40px 36px;width:100%;max-width:380px}
+.login-brand{text-align:center;margin-bottom:28px}
+.login-brand-name{font-size:11px;font-weight:700;letter-spacing:3px;color:var(--gold);text-transform:uppercase;margin-bottom:8px}
+.login-brand-title{font-size:22px;font-weight:700;color:var(--tx)}
+.login-brand-sub{font-size:12px;color:var(--tx3);margin-top:4px}
+.login-sep{width:40px;height:2px;background:var(--gold);margin:16px auto;border-radius:99px}
+.lfield{margin-bottom:14px}
+.llbl{font-size:10px;color:var(--tx3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px}
+.linp{width:100%;padding:11px 14px;background:var(--d3);border:1.5px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;outline:none;transition:border .15s;font-family:inherit}
+.linp:focus{border-color:var(--gold)}
+.lerr{font-size:12px;color:var(--rd);margin-top:8px;display:none;text-align:center}
+.lerr.show{display:block}
+.lbtn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px;font-family:inherit}
+.lbtn:hover{background:var(--gd)}
+.lbtn:active{transform:scale(.98)}
 .app{display:flex;min-height:100vh}
 .sb{width:256px;background:var(--d2);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
 .main{flex:1;overflow-y:auto}
@@ -129,7 +145,28 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="app">
+<form id="loginpage" class="loginpage" autocomplete="on" onsubmit="doLogin(event)">
+  <div class="loginbox">
+    <div class="login-brand">
+      <div class="login-brand-name">Ajans Paneli</div>
+      <div class="login-brand-title">Proje Takip</div>
+      <div class="login-brand-sub">Devam etmek için giriş yapın</div>
+      <div class="login-sep"></div>
+    </div>
+    <div class="lfield">
+      <div class="llbl">Kullanıcı Adı</div>
+      <input class="linp" id="l-user" type="text" name="username" autocomplete="username" placeholder="Kullanıcı adınız" required />
+    </div>
+    <div class="lfield">
+      <div class="llbl">Şifre</div>
+      <input class="linp" id="l-pass" type="password" name="password" autocomplete="current-password" placeholder="••••••••" required />
+    </div>
+    <div class="lerr" id="l-err">Kullanıcı adı veya şifre hatalı</div>
+    <button class="lbtn" type="submit">Giriş Yap</button>
+  </div>
+</form>
+
+<div class="app" id="mainapp" style="display:none">
 <div class="sb">
   <div class="sb-hd"><div class="sb-title">Ajans Paneli</div><div class="sb-sub">Proje Takip</div></div>
   <div class="sb-sec"><div class="sb-lbl">Firmalar</div><div id="fl"></div></div>
@@ -165,6 +202,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   <div class="gw" id="gw"><div class="empty"><div class="eico">🏗</div><div class="etit">Firma seçilmedi</div><div>Sol panelden seçin veya yeni ekleyin</div></div></div>
 </div>
 </div>
+</div><!-- /mainapp -->
 <div class="toastwrap" id="tw"></div>
 <div class="ov" id="m-add">
 <div class="md">
@@ -787,6 +825,42 @@ function copyLink(){if(!aid)return;const f=gf(aid);const url=location.origin+loc
 function closeM(id){document.getElementById(id).classList.remove('op');}
 document.querySelectorAll('.ov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('op')}));
 function toast(title,msg,err){const w=document.getElementById('tw');const t=document.createElement('div');t.className='toast'+(err?' err':'');t.innerHTML='<div class="ttit">'+title+'</div>'+(msg?'<div>'+msg+'</div>':'');w.appendChild(t);setTimeout(()=>t.remove(),4000);}
+// ── GİRİŞ KONTROLÜ ──────────────────────────────────────────
+const CREDENTIALS = {
+  'samet': 'Samet2024!',
+  'admin': 'Ajans2024!'
+};
+const SESSION_KEY = 'ajans_session';
+
+function checkSession(){
+  const s = sessionStorage.getItem(SESSION_KEY);
+  if(s){
+    try{
+      const d = JSON.parse(s);
+      if(d.ts && Date.now()-d.ts < 8*60*60*1000) return true; // 8 saat
+    }catch(e){}
+  }
+  return false;
+}
+
+function doLogin(e){
+  e.preventDefault();
+  const user = document.getElementById('l-user').value.trim().toLowerCase();
+  const pass = document.getElementById('l-pass').value;
+  const err = document.getElementById('l-err');
+  if(CREDENTIALS[user] && CREDENTIALS[user]===pass){
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({user,ts:Date.now()}));
+    document.getElementById('loginpage').style.display='none';
+    document.getElementById('mainapp').style.display='flex';
+    err.classList.remove('show');
+    init();
+  } else {
+    err.classList.add('show');
+    document.getElementById('l-pass').value='';
+    document.getElementById('l-pass').focus();
+  }
+}
+
 async function init(){
   showLoading();
   // Supabase'den yükle
@@ -802,7 +876,14 @@ async function init(){
   renderSB();if(firms.length>0)selF(firms[0].id);else showEmpty();
 }
 
-init();
+// Sayfa açılınca session kontrolü
+if(checkSession()){
+  document.getElementById('loginpage').style.display='none';
+  document.getElementById('mainapp').style.display='flex';
+  init();
+} else {
+  document.getElementById('l-user').focus();
+}
 updateWHStatus();
 </script>
 </body>
