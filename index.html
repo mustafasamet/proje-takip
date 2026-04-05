@@ -21,6 +21,17 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 .fd-val{font-size:13px;color:var(--tx);line-height:1.5;white-space:pre-wrap}
 .fd-empty{text-align:center;padding:40px;color:var(--tx3);font-size:13px}
 .fd-date{font-size:11px;color:var(--tx3);padding:10px 16px;border-top:1px solid var(--bd)}
+/* Sidebar firma sıralama */
+.fb{position:relative}
+.fb.pinned{border-left:2px solid var(--gold)}
+.pin-btn{opacity:0;font-size:11px;flex-shrink:0;padding:2px 4px;border-radius:4px;border:none;background:transparent;cursor:pointer;color:var(--tx3);transition:all .15s}
+.fb:hover .pin-btn{opacity:1}
+.pin-btn:hover{color:var(--gold)}
+.pin-btn.active{opacity:1;color:var(--gold)}
+.active-dot{width:7px;height:7px;border-radius:50%;background:var(--rd);flex-shrink:0;box-shadow:0 0 5px var(--rd);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.drag-over{background:var(--gbg)!important;border:1px dashed rgba(184,132,58,.5)!important}
+.dragging{opacity:.4}
 .adids-row{display:flex;gap:8px;margin:10px 24px 0;flex-wrap:wrap}
 .adid-card{display:flex;align-items:center;gap:8px;background:var(--d2);border:1px solid var(--bd2);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;transition:all .15s}
 .adid-card:hover{border-color:var(--gold)}
@@ -383,6 +394,7 @@ async function dbLoadFirms(){
     contact:r.contact||'', phone:r.phone||'',
     email:r.email||'', whEnabled:r.wh_enabled!==false,
     googleAdsId:r.google_ads_id||'', metaAdsId:r.meta_ads_id||'',
+    pinned:r.pinned||false,
     created:r.created_at, startedAt:r.started_at||null
   }));
 }
@@ -397,6 +409,7 @@ async function dbSaveFirm(f){
     phone:f.phone||'',
     email:f.email||'',
     wh_enabled:f.whEnabled!==false,
+    pinned:f.pinned||false,
     google_ads_id:f.googleAdsId||'',
     meta_ads_id:f.metaAdsId||'',
     updated_at:new Date().toISOString()
@@ -1302,6 +1315,7 @@ async function init(){
   }
   const p=new URLSearchParams(location.search);const fp=p.get('firma'),mp=p.get('musteri')==='1';
   if(fp){const m=firms.find(f=>slug(f.name)===fp);if(m){if(mp){ism=true;document.querySelector('.sb').style.display='none';document.getElementById('ta').style.display='none';const b=document.getElementById('mban');b.style.display='flex';document.getElementById('mbantxt').innerHTML='Bu sayfa <strong>'+m.name+'</strong> projenizin anlık durumunu göstermektedir.';}renderSB();selF(m.id);return;}}
+  loadFirmOrder();
   renderSB();if(firms.length>0)selF(firms[0].id);else showEmpty();
   updateWHStatus();
 }
