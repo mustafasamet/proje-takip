@@ -298,47 +298,6 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 </div>
 </div>
 
-<!-- CRM Sayfası -->
-<div class="crm-page" id="crm-page">
-
-  <!-- Topbar -->
-  <div class="crm-topbar">
-    <div>
-      <div class="crm-title">📊 CRM — Lead Takibi</div>
-      <div style="font-size:11px;color:var(--tx3);margin-top:2px">Meta ve diğer formlardan gelen potansiyel müşteriler</div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <div class="crm-stat">Toplam <b id="crm-total">0</b></div>
-      <div class="crm-stat" style="color:#0cce6b">Satış <b id="crm-converted" style="color:#0cce6b">0</b></div>
-      <div class="crm-stat" style="color:#ffa400">Potansiyel <b id="crm-potential" style="color:#ffa400">0</b></div>
-      <button class="formdata-btn" onclick="openAddLead()" style="background:var(--gold);color:#fff;border-color:var(--gold)">+ Lead Ekle</button>
-      <button class="formdata-btn" onclick="switchTab('panel')">← Panele Dön</button>
-    </div>
-  </div>
-
-  <!-- Filtreler -->
-  <div class="crm-filters">
-    <input class="crm-search" id="crm-search" placeholder="🔍 İsim, mail, telefon ara..." oninput="renderLeads()">
-    <button class="crm-filter on" data-f="all" onclick="setCRMFilter('all',this)">Hepsi</button>
-    <button class="crm-filter" data-f="new" onclick="setCRMFilter('new',this)">🆕 Yeni</button>
-    <button class="crm-filter" data-f="contacted" onclick="setCRMFilter('contacted',this)">📞 Arandı</button>
-    <button class="crm-filter" data-f="qualified" onclick="setCRMFilter('qualified',this)">⭐ Nitelikli</button>
-    <button class="crm-filter" data-f="converted" onclick="setCRMFilter('converted',this)">✅ Satış</button>
-    <button class="crm-filter" data-f="lost" onclick="setCRMFilter('lost',this)">❌ Kayıp</button>
-    <select class="crm-search" style="flex:0;width:auto" id="crm-sort" onchange="renderLeads()">
-      <option value="score">Puana Göre</option>
-      <option value="date">Tarihe Göre</option>
-      <option value="name">İsme Göre</option>
-    </select>
-  </div>
-
-  <!-- Lead Listesi -->
-  <div class="crm-list" id="crm-list">
-    <div class="fd-empty">⏳ Yükleniyor...</div>
-  </div>
-
-</div>
-</div><!-- /mainapp -->
 <!-- Lead Detay Modal -->
 <div class="ov" id="m-lead">
 <div class="md" style="max-width:600px;padding:0;overflow:hidden">
@@ -1817,4 +1776,46 @@ updateWHStatus();
 
 </script>
 </body>
-</html>
+</html
+<!-- CRM Sayfası -->
+<div class="crm-page" id="crm-page">
+
+  <!-- Topbar -->
+  <div class="crm-topbar">
+    <div>
+      <div class="crm-title">📊 CRM — Lead Takibi</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px">Meta ve diğer formlardan gelen potansiyel müşteriler</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="crm-stat">Toplam <b id="crm-total">0</b></div>
+      <div class="crm-stat" style="color:#0cce6b">Satış <b id="crm-converted" style="color:#0cce6b">0</b></div>
+      <div class="crm-stat" style="color:#ffa400">Potansiyel <b id="crm-potential" style="color:#ffa400">0</b></div>
+      <button class="formdata-btn" onclick="openAddLead()" style="background:var(--gold);color:#fff;border-color:var(--gold)">+ Lead Ekle</button>
+      <button class="formdata-btn" onclick="switchTab('panel')">← Panele Dön</button>
+    </div>
+  </div>
+
+  <!-- Filtreler -->
+  <div class="crm-filters">
+    <input class="crm-search" id="crm-search" placeholder="🔍 İsim, mail, telefon ara..." oninput="renderLeads()">
+    <button class="crm-filter on" data-f="all" onclick="setCRMFilter('all',this)">Hepsi</button>
+    <button class="crm-filter" data-f="new" onclick="setCRMFilter('new',this)">🆕 Yeni</button>
+    <button class="crm-filter" data-f="contacted" onclick="setCRMFilter('contacted',this)">📞 Arandı</button>
+    <button class="crm-filter" data-f="qualified" onclick="setCRMFilter('qualified',this)">⭐ Nitelikli</button>
+    <button class="crm-filter" data-f="converted" onclick="setCRMFilter('converted',this)">✅ Satış</button>
+    <button class="crm-filter" data-f="lost" onclick="setCRMFilter('lost',this)">❌ Kayıp</button>
+    <select class="crm-search" style="flex:0;width:auto" id="crm-sort" onchange="renderLeads()">
+      <option value="score">Puana Göre</option>
+      <option value="date">Tarihe Göre</option>
+      <option value="name">İsme Göre</option>
+    </select>
+  </div>
+
+  <!-- Lead Listesi -->
+  <div class="crm-list" id="crm-list">
+    <div class="fd-empty">⏳ Yükleniyor...</div>
+  </div>
+
+</div>
+</div><!-- /mainapp -->
+>
