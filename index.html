@@ -801,7 +801,23 @@ function renderMT(f){
   const el=document.getElementById('mtabs');el.style.display='flex';el.innerHTML='';
   const mk=(lbl,key,ac)=>{const b=document.createElement('button');b.className='mt'+(fm===key?' '+ac:'');b.textContent=lbl;b.onclick=()=>{fm=key;renderMT(f);renderGs(f);};el.appendChild(b);};
   mk('Tümü','all','on-all');
-  (f.mods||[]).forEach(m=>{const mm=MM[m];if(mm)mk(mm.i+' '+mm.l,m,'on-'+m);});
+  (f.mods||[]).forEach(m=>{
+    const mm=MM[m];if(!mm)return;
+    const wrap=document.createElement('div');wrap.style.cssText='display:flex;align-items:center;gap:2px';
+    const b=document.createElement('button');
+    b.className='mt'+(fm===m?' on-'+m:'');
+    b.textContent=mm.i+' '+mm.l;
+    b.onclick=()=>{fm=m;renderMT(f);renderGs(f);};
+    const x=document.createElement('button');
+    x.textContent='✕';
+    x.title=mm.l+' modülünü kaldır';
+    x.style.cssText='padding:2px 5px;border-radius:5px;border:none;background:transparent;color:var(--tx3);cursor:pointer;font-size:10px;line-height:1;transition:all .15s';
+    x.onmouseover=function(){this.style.color='var(--rd)';this.style.background='var(--rdbg)';};
+    x.onmouseout=function(){this.style.color='var(--tx3)';this.style.background='transparent';};
+    x.onclick=function(e){e.stopPropagation();removeMod(f,m);};
+    wrap.appendChild(b);wrap.appendChild(x);
+    el.appendChild(wrap);
+  });
   if((f.ct||[]).length)mk('✏️ Özel','oz','on-oz');
   el.innerHTML+='<div class="msep"></div>';
   ['hepsi','kritik','teknik','tasarim','icerik','test'].forEach(tag=>{
@@ -1203,6 +1219,16 @@ function renderFormData(fd){
 }
 
 // ── MODÜL DÜZENLEME ──────────────────────────────────────────
+async function removeMod(f,m){
+  const mm=MM[m];
+  if(!confirm((mm?.l||m)+' modülünü kaldırmak istiyor musunuz?\n\nŞablon görevleri listeden kaldırılır. Tamamlanan görev bilgileri silinmez.'))return;
+  f.mods=(f.mods||[]).filter(x=>x!==m);
+  if(fm===m)fm='all';
+  await sv(f);
+  renderMT(f);renderGs(f);renderSt(f);renderSB();
+  document.getElementById('ps').textContent=(f.mods||[]).map(x=>MM[x]?.l||x).join(' + ')||'Özel Proje';
+  toast((mm?.l||m)+' modülü kaldırıldı','');
+}
 function togEditMod(m){
   const card=document.getElementById('emc-'+m);
   const chk=document.getElementById('emck-'+m);
@@ -1217,15 +1243,27 @@ function togEditMod(m){
 
 function openEdit(){
   const f=gf(aid);if(!f)return;
-  document.getElementById('edit-firm-name').textContent=f.name+' — İletişim Bilgileri';
+  document.getElementById('edit-firm-name').textContent=f.name;
   document.getElementById('edit-name').value=f.name||'';
   document.getElementById('edit-contact').value=f.contact||'';
   document.getElementById('edit-phone').value=f.phone||'';
   document.getElementById('edit-email').value=f.email||'';
+  // Mevcut modülleri işaretle
+  ['sh','mt','gg'].forEach(m=>{
+    const card=document.getElementById('emc-'+m);
+    const chk=document.getElementById('emck-'+m);
+    if(!card||!chk)return;
+    const active=(f.mods||[]).includes(m);
+    card.dataset.active=active?'1':'0';
+    const cls={sh:'s-sh',mt:'s-mt',gg:'s-gg'}[m];
+    card.className='mc'+(active?' '+cls:'');
+    chk.innerHTML=active?'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
+    chk.style.cssText=active?'background:var(--gold);border-color:var(--gold)':'';
+  });
   document.getElementById('m-edit').classList.add('op');
   setTimeout(()=>document.getElementById('edit-name').focus(),100);
 }
-function saveEdit(){
+async function saveEdit(){
   const f=gf(aid);if(!f)return;
   const newName=document.getElementById('edit-name').value.trim();
   if(!newName){toast('Firma adı boş olamaz','',true);return;}
@@ -1233,11 +1271,23 @@ function saveEdit(){
   f.contact=document.getElementById('edit-contact').value.trim();
   f.phone=document.getElementById('edit-phone').value.trim();
   f.email=document.getElementById('edit-email').value.trim();
-  sv(f);closeM('m-edit');
+  // Modülleri güncelle
+  const oldMods=f.mods||[];
+  const newMods=['sh','mt','gg'].filter(m=>{
+    const card=document.getElementById('emc-'+m);
+    return card&&card.dataset.active==='1';
+  });
+  f.mods=newMods;
+  await sv(f);closeM('m-edit');
   document.getElementById('pt').textContent=f.name;
-  renderInfoCards(f);
-  renderSB();
-  toast('Bilgiler güncellendi','');
+  document.getElementById('ps').textContent=newMods.map(m=>MM[m]?.l||m).join(' + ')||'Özel Proje';
+  renderInfoCards(f);renderSB();renderMT(f);renderGs(f);renderSt(f);
+  const added=newMods.filter(m=>!oldMods.includes(m));
+  const removed=oldMods.filter(m=>!newMods.includes(m));
+  let msg='Bilgiler güncellendi';
+  if(added.length)msg+=' · '+added.map(m=>MM[m]?.l||m).join(', ')+' eklendi';
+  if(removed.length)msg+=' · '+removed.map(m=>MM[m]?.l||m).join(', ')+' kaldırıldı';
+  toast(msg,'');
 }
 async function delFirm(id){
   const f=gf(id);if(!f)return;
