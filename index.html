@@ -50,7 +50,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 .note-submit{padding:6px 14px;border-radius:8px;border:none;background:var(--gold);color:#fff;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:all .15s}
 .note-submit:hover{background:var(--gd)}
 /* ── CRM ─────────────────────────────────────────── */
-.crm-page{display:none;flex:1;flex-direction:column;overflow:hidden;min-width:0}
+.crm-page{display:none;flex:1;flex-direction:column;overflow-y:auto;min-width:0;height:100%}
 .crm-topbar{display:flex;align-items:center;gap:12px;padding:18px 24px 14px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
 .crm-title{font-size:18px;font-weight:700;color:var(--tx);flex:1}
 .crm-stat{background:var(--d2);border:1px solid var(--bd);border-radius:8px;padding:6px 14px;font-size:11px;color:var(--tx2);display:inline-flex;align-items:center;gap:6px}
@@ -107,7 +107,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 .lbtn{width:100%;padding:12px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;margin-top:8px;font-family:inherit}
 .lbtn:hover{background:var(--gd)}
 .lbtn:active{transform:scale(.98)}
-.app{display:flex;min-height:100vh}
+.app{display:flex;height:100vh;overflow:hidden}
 .sb{width:256px;background:var(--d2);border-right:1px solid var(--bd);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;flex-shrink:0}
 .main{flex:1;overflow-y:auto}
 .sb-hd{padding:16px;border-bottom:1px solid var(--bd)}
@@ -668,8 +668,7 @@ function calcScore(lead){
 // ── CRM FONKSİYONLARI ────────────────────────────────────────
 async function switchTab(tab){
   if(tab==='crm'){
-    document.querySelector('.main').style.visibility='hidden';
-    document.querySelector('.main').style.position='absolute';
+    document.getElementById('main-content').style.display='none';
     document.getElementById('crm-page').style.display='flex';
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
@@ -683,8 +682,7 @@ async function switchTab(tab){
     });
   } else {
     document.getElementById('crm-page').style.display='none';
-    document.querySelector('.main').style.visibility='';
-    document.querySelector('.main').style.position='';
+    document.getElementById('main-content').style.display='';
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
   }
@@ -1987,8 +1985,7 @@ function calcScore(lead){
 // ── CRM FONKSİYONLARI ────────────────────────────────────────
 async function switchTab(tab){
   if(tab==='crm'){
-    document.querySelector('.main').style.visibility='hidden';
-    document.querySelector('.main').style.position='absolute';
+    document.getElementById('main-content').style.display='none';
     document.getElementById('crm-page').style.display='flex';
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
@@ -2002,8 +1999,7 @@ async function switchTab(tab){
     });
   } else {
     document.getElementById('crm-page').style.display='none';
-    document.querySelector('.main').style.visibility='';
-    document.querySelector('.main').style.position='';
+    document.getElementById('main-content').style.display='';
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
   }
