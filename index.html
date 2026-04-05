@@ -49,6 +49,49 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 .note-input{flex:1;background:transparent;border:none;outline:none;font-size:13px;color:var(--tx);font-family:inherit;resize:none}
 .note-submit{padding:6px 14px;border-radius:8px;border:none;background:var(--gold);color:#fff;font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:all .15s}
 .note-submit:hover{background:var(--gd)}
+/* ── CRM ─────────────────────────────────────────── */
+.crm-page{display:none;flex-direction:column;height:100%;overflow:hidden}
+.crm-page.show{display:flex}
+.crm-topbar{display:flex;align-items:center;gap:12px;padding:18px 24px 14px;border-bottom:1px solid var(--bd);flex-wrap:wrap}
+.crm-title{font-size:18px;font-weight:700;color:var(--tx);flex:1}
+.crm-stat{background:var(--d2);border:1px solid var(--bd);border-radius:8px;padding:6px 14px;font-size:11px;color:var(--tx2);display:inline-flex;align-items:center;gap:6px}
+.crm-stat b{color:var(--tx);font-size:14px;font-weight:700}
+.crm-filters{display:flex;gap:8px;padding:10px 24px;border-bottom:1px solid var(--bd);align-items:center;flex-wrap:wrap}
+.crm-filter{padding:4px 12px;border-radius:99px;border:1px solid var(--bd2);background:transparent;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s;font-family:inherit}
+.crm-filter:hover,.crm-filter.on{background:var(--gbg);color:var(--gold);border-color:rgba(184,132,58,.4)}
+.crm-search{flex:1;min-width:180px;padding:6px 12px;background:var(--d3);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-size:12px;outline:none;font-family:inherit}
+.crm-search:focus{border-color:var(--gold)}
+.crm-list{flex:1;overflow-y:auto;padding:12px 24px}
+.lead-card{background:var(--d2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:12px}
+.lead-card:hover{border-color:var(--bd2);background:var(--d3)}
+.lead-card.selected{border-color:var(--gold);background:var(--gbg)}
+.lead-score{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
+.score-high{background:#eaf3de;color:#27500A}
+.score-mid{background:#fff8ee;color:#8a5000}
+.score-low{background:#fff2f2;color:#8a0000}
+.lead-info{flex:1;min-width:0}
+.lead-name{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:3px}
+.lead-meta{font-size:11px;color:var(--tx3);display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.lead-tags{display:flex;gap:4px;flex-wrap:wrap}
+.lead-tag{padding:2px 8px;border-radius:99px;font-size:10px;font-weight:600}
+.tag-new{background:rgba(74,158,255,.15);color:#4A9EFF}
+.tag-contacted{background:rgba(255,164,0,.15);color:#ffa400}
+.tag-qualified{background:rgba(109,40,217,.15);color:#9D6FEA}
+.tag-converted{background:rgba(12,206,107,.15);color:#0cce6b}
+.tag-lost{background:rgba(255,78,66,.15);color:#ff4e42}
+.lead-actions{display:flex;gap:6px;flex-shrink:0}
+.lead-action-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--bd2);background:var(--d3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s;color:var(--tx2)}
+.lead-action-btn:hover{border-color:var(--gold);color:var(--gold)}
+/* Lead Detail Modal */
+.lead-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.lead-detail-field{background:var(--d3);border-radius:8px;padding:10px 12px}
+.lead-detail-lbl{font-size:10px;color:var(--tx3);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+.lead-detail-val{font-size:13px;color:var(--tx);font-weight:500;cursor:pointer}
+.lead-detail-val:hover{color:var(--gold)}
+.lead-crm-select{width:100%;padding:8px 10px;background:var(--d3);border:1px solid var(--bd2);border-radius:8px;color:var(--tx);font-size:13px;outline:none;font-family:inherit;cursor:pointer}
+.lead-crm-select:focus{border-color:var(--gold)}
+.lead-raw-btn{font-size:11px;color:var(--tx3);background:transparent;border:1px solid var(--bd);border-radius:6px;padding:3px 10px;cursor:pointer;transition:all .15s}
+.lead-raw-btn:hover{color:var(--gold);border-color:rgba(184,132,58,.4)}
 .loginpage{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:999;padding:16px}
 .loginbox{background:var(--d2);border:1px solid var(--bd2);border-radius:20px;padding:40px 36px;width:100%;max-width:380px}
 .login-brand{text-align:center;margin-bottom:28px}
@@ -247,6 +290,86 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 </div>
 </div>
 </div><!-- /mainapp -->
+<!-- CRM Sayfası -->
+<div class="crm-page" id="crm-page">
+
+  <!-- Topbar -->
+  <div class="crm-topbar">
+    <div>
+      <div class="crm-title">📊 CRM — Lead Takibi</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px">Meta ve diğer formlardan gelen potansiyel müşteriler</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div class="crm-stat">Toplam <b id="crm-total">0</b></div>
+      <div class="crm-stat" style="color:#0cce6b">Satış <b id="crm-converted" style="color:#0cce6b">0</b></div>
+      <div class="crm-stat" style="color:#ffa400">Potansiyel <b id="crm-potential" style="color:#ffa400">0</b></div>
+      <button class="formdata-btn" onclick="openAddLead()" style="background:var(--gold);color:#fff;border-color:var(--gold)">+ Lead Ekle</button>
+      <button class="formdata-btn" onclick="showPanel()">← Panele Dön</button>
+    </div>
+  </div>
+
+  <!-- Filtreler -->
+  <div class="crm-filters">
+    <input class="crm-search" id="crm-search" placeholder="🔍 İsim, mail, telefon ara..." oninput="renderLeads()">
+    <button class="crm-filter on" data-f="all" onclick="setCRMFilter('all',this)">Hepsi</button>
+    <button class="crm-filter" data-f="new" onclick="setCRMFilter('new',this)">🆕 Yeni</button>
+    <button class="crm-filter" data-f="contacted" onclick="setCRMFilter('contacted',this)">📞 Arandı</button>
+    <button class="crm-filter" data-f="qualified" onclick="setCRMFilter('qualified',this)">⭐ Nitelikli</button>
+    <button class="crm-filter" data-f="converted" onclick="setCRMFilter('converted',this)">✅ Satış</button>
+    <button class="crm-filter" data-f="lost" onclick="setCRMFilter('lost',this)">❌ Kayıp</button>
+    <select class="crm-search" style="flex:0;width:auto" id="crm-sort" onchange="renderLeads()">
+      <option value="score">Puana Göre</option>
+      <option value="date">Tarihe Göre</option>
+      <option value="name">İsme Göre</option>
+    </select>
+  </div>
+
+  <!-- Lead Listesi -->
+  <div class="crm-list" id="crm-list">
+    <div class="fd-empty">⏳ Yükleniyor...</div>
+  </div>
+
+</div>
+
+<!-- Lead Detay Modal -->
+<div class="ov" id="m-lead">
+<div class="md" style="max-width:600px;padding:0;overflow:hidden">
+  <div style="padding:18px 20px 14px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:15px;font-weight:700" id="lead-modal-name">Lead</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px" id="lead-modal-sub"></div>
+    </div>
+    <button class="btn bgh bsm" onclick="closeM('m-lead')">✕</button>
+  </div>
+  <div style="max-height:75vh;overflow-y:auto;padding:16px 20px 20px" id="lead-modal-body"></div>
+</div>
+</div>
+
+<!-- Lead Ekle Modal -->
+<div class="ov" id="m-add-lead">
+<div class="md" style="max-width:420px">
+  <div class="mdtit">Yeni Lead Ekle</div>
+  <div class="mf"><div class="ml">Ad Soyad *</div><input class="mi" id="al-name" placeholder="Ahmet Yılmaz" /></div>
+  <div class="mf"><div class="ml">Telefon *</div><input class="mi" id="al-phone" placeholder="05xx xxx xx xx" /></div>
+  <div class="mf"><div class="ml">E-posta</div><input class="mi" id="al-email" placeholder="ahmet@mail.com" /></div>
+  <div class="mf"><div class="ml">Web Sitesi</div><input class="mi" id="al-website" placeholder="site.com" /></div>
+  <div class="mf"><div class="ml">Kaynak</div>
+    <select class="mi" id="al-source">
+      <option value="manual">Manuel</option>
+      <option value="meta">Meta Lead Form</option>
+      <option value="sametsalik">sametsalik.com Formu</option>
+      <option value="referral">Referans</option>
+      <option value="other">Diğer</option>
+    </select>
+  </div>
+  <div class="mf"><div class="ml">Not</div><textarea class="mi" id="al-notes" rows="2" placeholder="İlk izlenim..."></textarea></div>
+  <div class="macts">
+    <button class="btn bgh" onclick="closeM('m-add-lead')">İptal</button>
+    <button class="btn bgold" onclick="saveNewLead()">Ekle</button>
+  </div>
+</div>
+</div>
+
 <div class="toastwrap" id="tw"></div>
 <div class="ov" id="m-notes">
 <div class="md" style="max-width:540px;padding:0;overflow:hidden">
@@ -446,6 +569,297 @@ async function dbSaveAdIds(firmId,googleId,metaId){
   if(error){console.error('adid hatası:',error);return false;}
   return true;
 }
+// ── CRM LEADS ────────────────────────────────────────────────
+async function dbLoadLeads(){
+  const {data,error}=await sb.from('leads').select('*').order('score',{ascending:false}).order('created_at',{ascending:false}).limit(500);
+  if(error){console.error('leads hatası:',error);return [];}
+  return data||[];
+}
+async function dbSaveLead(lead){
+  const row={
+    full_name:lead.full_name||'',email:lead.email||'',phone:lead.phone||'',
+    website:lead.website||'',source:lead.source||'manual',form_name:lead.form_name||'',
+    campaign_name:lead.campaign_name||'',ad_name:lead.ad_name||'',platform:lead.platform||'',
+    reklam_platformu:lead.reklam_platformu||'',reklam_suresi:lead.reklam_suresi||'',
+    aylik_butce:lead.aylik_butce||'',memnuniyet:lead.memnuniyet||'',
+    acil_ihtiyac:lead.acil_ihtiyac||'',video_icerik:lead.video_icerik||'',
+    status:lead.status||'new',gorusme:lead.gorusme||'',potansiyel:lead.potansiyel||'',
+    satis:lead.satis||'',notes:lead.notes||'',score:lead.score||0,
+    raw_data:lead.raw_data||{},updated_at:new Date().toISOString()
+  };
+  if(lead.id){
+    const {error}=await sb.from('leads').update(row).eq('id',lead.id);
+    if(error)console.error('lead güncelleme hatası:',error);
+  } else {
+    const {data,error}=await sb.from('leads').insert(row).select().single();
+    if(error){console.error('lead ekle hatası:',error);return null;}
+    return data;
+  }
+}
+async function dbDeleteLead(id){
+  await sb.from('leads').delete().eq('id',id);
+}
+
+// ── CRM STATE ─────────────────────────────────────────────────
+let leads=[];
+let crmFilter='all';
+
+// ── PUAN HESAPLA ─────────────────────────────────────────────
+function calcScore(lead){
+  let s=0;
+  const b=lead.aylik_butce||'';
+  if(b.includes('50.000')||b.includes('100.000')||b.includes('üzeri'))s+=40;
+  else if(b.includes('20.000')||b.includes('30.000'))s+=30;
+  else if(b.includes('10.000'))s+=20;
+  else if(b.includes('5.000'))s+=10;
+  const sur=lead.reklam_suresi||'';
+  if(sur.includes('yıl')||sur.includes('3 yıl'))s+=20;
+  else if(sur.includes('1 yıl')||sur.includes('2 yıl'))s+=15;
+  else if(sur.includes('6 ay')||sur.includes('aydan'))s+=10;
+  else if(sur.includes('yeni')||sur.includes('başlamadım'))s+=3;
+  const acil=lead.acil_ihtiyac||'';
+  if(acil.toLowerCase().includes('evet'))s+=20;
+  if(lead.website&&lead.website.length>3)s+=10;
+  const vid=lead.video_icerik||'';
+  if(vid.toLowerCase().includes('evet'))s+=10;
+  return Math.min(s,100);
+}
+
+// ── CRM FONKSİYONLARI ────────────────────────────────────────
+async function showCRM(){
+  // Panel gizle, CRM göster
+  document.getElementById('main').style.display='none';
+  document.getElementById('crm-page').classList.add('show');
+  document.getElementById('crm-sidebar-btn').classList.add('active');
+  if(!leads.length) await loadLeads();
+  renderLeads();
+}
+function showPanel(){
+  document.getElementById('crm-page').classList.remove('show');
+  document.getElementById('main').style.display='';
+  document.getElementById('crm-sidebar-btn').classList.remove('active');
+}
+async function loadLeads(){
+  const data=await dbLoadLeads();
+  leads=data.map(l=>({...l,score:l.score||calcScore(l)}));
+  updateCRMStats();
+}
+function updateCRMStats(){
+  document.getElementById('crm-total').textContent=leads.length;
+  document.getElementById('crm-converted').textContent=leads.filter(l=>l.status==='converted'||l.satis==='Yapıldı').length;
+  document.getElementById('crm-potential').textContent=leads.filter(l=>l.potansiyel==='Yüksek'||l.score>=60).length;
+}
+function setCRMFilter(f,el){
+  crmFilter=f;
+  document.querySelectorAll('.crm-filter').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  renderLeads();
+}
+function renderLeads(){
+  const el=document.getElementById('crm-list');
+  const q=(document.getElementById('crm-search')?.value||'').toLowerCase();
+  const sort=document.getElementById('crm-sort')?.value||'score';
+  let list=[...leads];
+  // Filtre
+  if(crmFilter!=='all') list=list.filter(l=>l.status===crmFilter);
+  // Arama
+  if(q) list=list.filter(l=>(l.full_name+l.email+l.phone+l.website).toLowerCase().includes(q));
+  // Sırala
+  list.sort((a,b)=>{
+    if(sort==='score') return (b.score||0)-(a.score||0);
+    if(sort==='name') return (a.full_name||'').localeCompare(b.full_name||'');
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
+  if(!list.length){
+    el.innerHTML='<div class="fd-empty">📭 Lead bulunamadı</div>';
+    return;
+  }
+  el.innerHTML=list.map(l=>{
+    const sc=l.score||0;
+    const scCls=sc>=70?'score-high':sc>=40?'score-mid':'score-low';
+    const stTag={new:'tag-new',contacted:'tag-contacted',qualified:'tag-qualified',converted:'tag-converted',lost:'tag-lost'}[l.status]||'tag-new';
+    const stLbl={new:'Yeni',contacted:'Arandı',qualified:'Nitelikli',converted:'Satış',lost:'Kayıp'}[l.status]||'Yeni';
+    const date=l.created_at?new Date(l.created_at).toLocaleDateString('tr-TR'):'';
+    const butce=l.aylik_butce?'💰 '+l.aylik_butce.substring(0,20):'';
+    const sur=l.reklam_suresi?'⏱ '+l.reklam_suresi.substring(0,20):'';
+    return `<div class="lead-card" onclick="openLead(${l.id})">
+      <div class="lead-score ${scCls}">${sc}</div>
+      <div class="lead-info">
+        <div class="lead-name">${l.full_name||'—'}</div>
+        <div class="lead-meta">
+          ${l.phone?`<span>📞 ${l.phone}</span>`:''}
+          ${l.email?`<span>✉️ ${l.email}</span>`:''}
+          ${l.website?`<span>🌐 ${l.website}</span>`:''}
+          ${date?`<span>📅 ${date}</span>`:''}
+        </div>
+        <div class="lead-meta" style="color:var(--tx2)">
+          ${butce?`<span>${butce}</span>`:''}
+          ${sur?`<span>${sur}</span>`:''}
+          ${l.source?`<span>📌 ${l.source}</span>`:''}
+        </div>
+        <div class="lead-tags">
+          <span class="lead-tag ${stTag}">${stLbl}</span>
+          ${l.potansiyel?`<span class="lead-tag" style="background:var(--d4);color:var(--tx2)">${l.potansiyel}</span>`:''}
+          ${l.gorusme?`<span class="lead-tag" style="background:var(--d4);color:var(--tx2)">${l.gorusme}</span>`:''}
+          ${l.satis?`<span class="lead-tag" style="background:var(--d4);color:var(--tx2)">${l.satis}</span>`:''}
+        </div>
+      </div>
+      <div class="lead-actions" onclick="event.stopPropagation()">
+        ${l.phone?`<button class="lead-action-btn" title="Telefonu kopyala" onclick="copyLead('${l.phone}','Telefon')">📋</button>`:''}
+        ${l.phone?`<button class="lead-action-btn" title="Ara" onclick="window.open('tel:${l.phone}')">📞</button>`:''}
+        ${l.email?`<button class="lead-action-btn" title="Mail kopyala" onclick="copyLead('${l.email}','Mail')">✉️</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+function copyLead(val,lbl){
+  navigator.clipboard.writeText(val).catch(()=>{});
+  toast(lbl+' kopyalandı',val);
+}
+function openLead(id){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  document.getElementById('lead-modal-name').textContent=l.full_name||'Lead';
+  document.getElementById('lead-modal-sub').textContent=(l.source||'')+(l.campaign_name?' · '+l.campaign_name:'');
+  const date=l.created_at?new Date(l.created_at).toLocaleString('tr-TR'):'';
+  const sc=l.score||0;
+  const scCls=sc>=70?'#0cce6b':sc>=40?'#ffa400':'#ff4e42';
+  document.getElementById('lead-modal-body').innerHTML=`
+    <!-- Skor -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;background:var(--d3);border-radius:10px;padding:12px 16px">
+      <div style="font-size:28px;font-weight:700;color:${scCls}">${sc}</div>
+      <div>
+        <div style="font-size:11px;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px">Potansiyel Puanı</div>
+        <div style="font-size:12px;color:var(--tx2);margin-top:2px">${sc>=70?'🔥 Yüksek potansiyel':sc>=40?'📊 Orta potansiyel':'📉 Düşük potansiyel'}</div>
+      </div>
+      <div style="flex:1;text-align:right;font-size:11px;color:var(--tx3)">📅 ${date}</div>
+    </div>
+    <!-- İletişim -->
+    <div class="lead-detail-grid">
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">Telefon</div>
+        <div class="lead-detail-val" onclick="copyLead('${l.phone||''}','Telefon')" title="Kopyala">${l.phone||'—'} 📋</div>
+      </div>
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">E-posta</div>
+        <div class="lead-detail-val" onclick="copyLead('${l.email||''}','Mail')" title="Kopyala">${l.email||'—'} 📋</div>
+      </div>
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">Web Sitesi</div>
+        <div class="lead-detail-val" onclick="copyLead('${l.website||''}','Website')" title="Kopyala">${l.website||'—'} 📋</div>
+      </div>
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">Kaynak</div>
+        <div class="lead-detail-val">${l.source||'—'}</div>
+      </div>
+    </div>
+    <!-- Form Cevapları -->
+    ${(l.aylik_butce||l.reklam_suresi||l.reklam_platformu||l.acil_ihtiyac)?`
+    <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Form Cevapları</div>
+    <div class="lead-detail-grid" style="margin-bottom:16px">
+      ${l.aylik_butce?`<div class="lead-detail-field"><div class="lead-detail-lbl">Aylık Bütçe</div><div class="lead-detail-val" style="cursor:default">${l.aylik_butce}</div></div>`:''}
+      ${l.reklam_suresi?`<div class="lead-detail-field"><div class="lead-detail-lbl">Reklam Süresi</div><div class="lead-detail-val" style="cursor:default">${l.reklam_suresi}</div></div>`:''}
+      ${l.reklam_platformu?`<div class="lead-detail-field"><div class="lead-detail-lbl">Platform</div><div class="lead-detail-val" style="cursor:default">${l.reklam_platformu}</div></div>`:''}
+      ${l.acil_ihtiyac?`<div class="lead-detail-field"><div class="lead-detail-lbl">Acil İhtiyaç</div><div class="lead-detail-val" style="cursor:default">${l.acil_ihtiyac}</div></div>`:''}
+      ${l.memnuniyet?`<div class="lead-detail-field"><div class="lead-detail-lbl">Memnuniyet</div><div class="lead-detail-val" style="cursor:default">${l.memnuniyet}</div></div>`:''}
+      ${l.video_icerik?`<div class="lead-detail-field"><div class="lead-detail-lbl">Video İçerik</div><div class="lead-detail-val" style="cursor:default">${l.video_icerik}</div></div>`:''}
+    </div>`:''}
+    <!-- CRM Alanları -->
+    <div style="font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">CRM Durumu</div>
+    <div class="lead-detail-grid" style="margin-bottom:16px">
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">Durum</div>
+        <select class="lead-crm-select" onchange="updateLeadField(${l.id},'status',this.value)">
+          <option value="new" ${l.status==='new'?'selected':''}>🆕 Yeni</option>
+          <option value="contacted" ${l.status==='contacted'?'selected':''}>📞 Arandı</option>
+          <option value="qualified" ${l.status==='qualified'?'selected':''}>⭐ Nitelikli</option>
+          <option value="converted" ${l.status==='converted'?'selected':''}>✅ Satış</option>
+          <option value="lost" ${l.status==='lost'?'selected':''}>❌ Kayıp</option>
+        </select>
+      </div>
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">Görüşme</div>
+        <select class="lead-crm-select" onchange="updateLeadField(${l.id},'gorusme',this.value)">
+          <option value="" ${!l.gorusme?'selected':''}>Seç...</option>
+          <option value="Aranmadı" ${l.gorusme==='Aranmadı'?'selected':''}>Aranmadı</option>
+          <option value="Arandı" ${l.gorusme==='Arandı'?'selected':''}>Arandı</option>
+          <option value="Görüşüldü" ${l.gorusme==='Görüşüldü'?'selected':''}>Görüşüldü</option>
+          <option value="Takipte" ${l.gorusme==='Takipte'?'selected':''}>Takipte</option>
+          <option value="Ulaşılamadı" ${l.gorusme==='Ulaşılamadı'?'selected':''}>Ulaşılamadı</option>
+        </select>
+      </div>
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">Potansiyel</div>
+        <select class="lead-crm-select" onchange="updateLeadField(${l.id},'potansiyel',this.value)">
+          <option value="" ${!l.potansiyel?'selected':''}>Seç...</option>
+          <option value="Düşük" ${l.potansiyel==='Düşük'?'selected':''}>📉 Düşük</option>
+          <option value="Orta" ${l.potansiyel==='Orta'?'selected':''}>📊 Orta</option>
+          <option value="Yüksek" ${l.potansiyel==='Yüksek'?'selected':''}>🔥 Yüksek</option>
+        </select>
+      </div>
+      <div class="lead-detail-field">
+        <div class="lead-detail-lbl">Satış</div>
+        <select class="lead-crm-select" onchange="updateLeadField(${l.id},'satis',this.value)">
+          <option value="" ${!l.satis?'selected':''}>Seç...</option>
+          <option value="Yapıldı" ${l.satis==='Yapıldı'?'selected':''}>✅ Yapıldı</option>
+          <option value="Potansiyel" ${l.satis==='Potansiyel'?'selected':''}>⭐ Potansiyel</option>
+          <option value="Değil" ${l.satis==='Değil'?'selected':''}>❌ Değil</option>
+        </select>
+      </div>
+    </div>
+    <!-- Not -->
+    <div class="lead-detail-field" style="margin-bottom:12px">
+      <div class="lead-detail-lbl">Notlar</div>
+      <textarea style="width:100%;background:transparent;border:none;outline:none;color:var(--tx);font-size:13px;font-family:inherit;resize:vertical;min-height:60px;line-height:1.6" 
+        placeholder="Görüşme notu, özel durum..." 
+        onblur="updateLeadField(${l.id},'notes',this.value)">${l.notes||''}</textarea>
+    </div>
+    <!-- Sil -->
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <button class="lead-raw-btn" onclick="toggleRawData(${l.id})">🔍 Ham Veriyi Göster</button>
+      <button class="lead-raw-btn" style="color:var(--rd)" onclick="deleteLead(${l.id})">🗑 Sil</button>
+    </div>
+    <div id="raw-${l.id}" style="display:none;margin-top:12px;background:var(--d3);border-radius:8px;padding:12px;font-size:11px;color:var(--tx2);font-family:monospace;overflow-x:auto;white-space:pre-wrap">${JSON.stringify(l.raw_data||{},null,2)}</div>
+  `;
+  document.getElementById('m-lead').classList.add('op');
+}
+async function updateLeadField(id,field,val){
+  const l=leads.find(x=>x.id===id);if(!l)return;
+  l[field]=val;
+  if(field==='notes'){await dbSaveLead(l);toast('Not kaydedildi','');}
+  else {await dbSaveLead(l);renderLeads();updateCRMStats();}
+}
+function toggleRawData(id){
+  const el=document.getElementById('raw-'+id);
+  if(el)el.style.display=el.style.display==='none'?'block':'none';
+}
+async function deleteLead(id){
+  if(!confirm('Bu lead silinecek. Emin misiniz?'))return;
+  await dbDeleteLead(id);
+  leads=leads.filter(l=>l.id!==id);
+  closeM('m-lead');renderLeads();updateCRMStats();
+  toast('Lead silindi','');
+}
+function openAddLead(){document.getElementById('m-add-lead').classList.add('op');}
+async function saveNewLead(){
+  const name=document.getElementById('al-name').value.trim();
+  const phone=document.getElementById('al-phone').value.trim();
+  if(!name&&!phone){toast('İsim veya telefon girin','',true);return;}
+  const lead={
+    full_name:name,phone,
+    email:document.getElementById('al-email').value.trim(),
+    website:document.getElementById('al-website').value.trim(),
+    source:document.getElementById('al-source').value,
+    notes:document.getElementById('al-notes').value.trim(),
+    status:'new',score:0
+  };
+  lead.score=calcScore(lead);
+  const saved=await dbSaveLead(lead);
+  if(saved){leads.unshift({...lead,...saved});renderLeads();updateCRMStats();}
+  closeM('m-add-lead');
+  ['al-name','al-phone','al-email','al-website','al-notes'].forEach(id=>document.getElementById(id).value='');
+  toast('Lead eklendi',name);
+}
+
 async function dbLoadAllSubmissions(){
   const {data,error} = await sb.from('form_submissions')
     .select('id,brand,name,email,firm_id,submitted_at,data')
