@@ -641,8 +641,14 @@ async function switchTab(tab){
     document.getElementById('crm-page').classList.add('show');
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
-    if(!leads.length) await loadLeads();
-    renderLeads();
+    document.getElementById('crm-list').innerHTML='<div class="fd-empty">⏳ Yükleniyor...</div>';
+    try {
+      await loadLeads();
+      renderLeads();
+    } catch(e) {
+      console.error('CRM yükleme hatası:', e);
+      document.getElementById('crm-list').innerHTML='<div class="fd-empty">❌ Yükleme hatası: '+e.message+'</div>';
+    }
   } else {
     document.getElementById('crm-page').classList.remove('show');
     document.getElementById('main-content').style.display='';
@@ -653,9 +659,16 @@ async function switchTab(tab){
 async function showCRM(){await switchTab('crm');}
 function showPanel(){switchTab('panel');}
 async function loadLeads(){
-  const data=await dbLoadLeads();
-  leads=data.map(l=>({...l,score:l.score||calcScore(l)}));
-  updateCRMStats();
+  try {
+    const data=await dbLoadLeads();
+    leads=data.map(l=>({...l,score:l.score||calcScore(l)}));
+    updateCRMStats();
+    console.log('Leads yüklendi:', leads.length);
+  } catch(e) {
+    console.error('loadLeads hatası:', e);
+    leads=[];
+    throw e;
+  }
 }
 function updateCRMStats(){
   document.getElementById('crm-total').textContent=leads.length;
