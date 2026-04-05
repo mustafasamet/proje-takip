@@ -261,7 +261,7 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
     <div id="wh-status" class="wh-status"></div>
   </div>
 </div>
-<div class="main">
+<div class="main" id="main-content">
   <div class="topb">
     <div><div class="pt" id="pt">Firma Seç</div><div class="ps" id="ps">Sol panelden bir firma seçin</div></div>
     <div class="tacts" id="ta" style="display:none">
@@ -628,8 +628,7 @@ function calcScore(lead){
 
 // ── CRM FONKSİYONLARI ────────────────────────────────────────
 async function showCRM(){
-  // Panel gizle, CRM göster
-  document.getElementById('main').style.display='none';
+  document.getElementById('main-content').style.display='none';
   document.getElementById('crm-page').classList.add('show');
   document.getElementById('crm-sidebar-btn').classList.add('active');
   if(!leads.length) await loadLeads();
@@ -637,7 +636,7 @@ async function showCRM(){
 }
 function showPanel(){
   document.getElementById('crm-page').classList.remove('show');
-  document.getElementById('main').style.display='';
+  document.getElementById('main-content').style.display='';
   document.getElementById('crm-sidebar-btn').classList.remove('active');
 }
 async function loadLeads(){
