@@ -849,15 +849,13 @@ async function togT(tid){
   // İlk görev tamamlandığında başlangıç zamanı kaydet
   if(!was&&!f.startedAt){f.startedAt=new Date().toISOString();}
   f.tasks[tid]=!was;sv(f);renderSt(f);renderGs(f);renderSB();
-  if(!was&&f.wh?.url){
+  if(!was&&settings.whUrl){
     const task=getGs(f).flatMap(g=>g.ts).find(t=>t.id===tid);
     if(task){
       const p=getProg(f);
       if(p.done===p.total&&p.total>0){
-        // Tüm görevler tamamlandı — proje tamamlama maili
         await sendWH(f,task,'project_completed');
       } else {
-        // Normal adım bildirimi
         await sendWH(f,task,'task_completed');
       }
     }
