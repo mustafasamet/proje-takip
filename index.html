@@ -641,13 +641,13 @@ async function switchTab(tab){
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
     document.getElementById('crm-list').innerHTML='<div class="fd-empty">⏳ Yükleniyor...</div>';
-    try {
-      await loadLeads();
+    loadLeads().then(()=>{
       renderLeads();
-    } catch(e) {
+      updateCRMStats();
+    }).catch(e=>{
       console.error('CRM yükleme hatası:', e);
       document.getElementById('crm-list').innerHTML='<div class="fd-empty">❌ Yükleme hatası: '+e.message+'</div>';
-    }
+    });
   } else {
     document.getElementById('crm-page').style.display='none';
     document.getElementById('main-content').style.display='';
