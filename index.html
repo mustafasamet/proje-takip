@@ -1235,13 +1235,31 @@ function copyLink(){if(!aid)return;const f=gf(aid);const url=location.origin+loc
 function closeM(id){document.getElementById(id).classList.remove('op');}
 document.querySelectorAll('.ov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('op')}));
 function toast(title,msg,err){const w=document.getElementById('tw');const t=document.createElement('div');t.className='toast'+(err?' err':'');t.innerHTML='<div class="ttit">'+title+'</div>'+(msg?'<div>'+msg+'</div>':'');w.appendChild(t);setTimeout(()=>t.remove(),4000);}
-function init(){
+async function init(){
+  showLoading();
+  try{
+    [firms,settings]=await Promise.all([dbLoadFirms(),dbLoadSettings()]);
+  }catch(e){
+    console.error('Supabase hata:',e);
+    toast('Veritabanı bağlantı hatası','',true);
+    firms=[];settings={whUrl:''};
+  }
+  loadFirmOrder();
   const p=new URLSearchParams(location.search);const fp=p.get('firma'),mp=p.get('musteri')==='1';
   if(fp){const m=firms.find(f=>slug(f.name)===fp);if(m){if(mp){ism=true;document.querySelector('.sb').style.display='none';document.getElementById('ta').style.display='none';const b=document.getElementById('mban');b.style.display='flex';document.getElementById('mbantxt').innerHTML='Bu sayfa <strong>'+m.name+'</strong> projenizin anlık durumunu göstermektedir.';}renderSB();selF(m.id);return;}}
-  renderSB();selF(firms[0].id);
+  renderSB();
+  if(firms.length>0)selF(firms[0].id);else showEmpty();
+  updateWHStatus();
 }
 
-init();
+// Sayfa açılınca session kontrolü
+if(checkSession()){
+  document.getElementById('loginpage').style.display='none';
+  document.getElementById('mainapp').style.display='flex';
+  init();
+} else {
+  document.getElementById('l-user').focus();
+}
 updateWHStatus();
 
 </script>
