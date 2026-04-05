@@ -492,6 +492,37 @@ function showEmpty(){
   document.getElementById('gw').innerHTML='<div class="empty"><div class="eico">🏗</div><div class="etit">Firma seçilmedi</div><div>Sol panelden seçin veya yeni ekleyin</div></div>';
 }
 
+// ── GİRİŞ KONTROLÜ ──────────────────────────────────────────
+const CREDENTIALS = {
+  'samet': 'Samet2024!',
+  'admin': 'Ajans2024!'
+};
+const SESSION_KEY = 'ajans_session';
+
+function checkSession(){
+  const s=sessionStorage.getItem(SESSION_KEY);
+  if(s){try{const d=JSON.parse(s);if(d.ts&&Date.now()-d.ts<8*60*60*1000)return true;}catch(e){}}
+  return false;
+}
+
+function doLogin(e){
+  e.preventDefault();
+  const user=document.getElementById('l-user').value.trim().toLowerCase();
+  const pass=document.getElementById('l-pass').value;
+  const err=document.getElementById('l-err');
+  if(CREDENTIALS[user]&&CREDENTIALS[user]===pass){
+    sessionStorage.setItem(SESSION_KEY,JSON.stringify({user,ts:Date.now()}));
+    document.getElementById('loginpage').style.display='none';
+    document.getElementById('mainapp').style.display='flex';
+    err.classList.remove('show');
+    init().then(()=>updateWHStatus());
+  } else {
+    err.classList.add('show');
+    document.getElementById('l-pass').value='';
+    document.getElementById('l-pass').focus();
+  }
+}
+
 const T={
 sh:[
   {id:'sh1',lb:'Gün 1',c:'#185FA5',bg:'rgba(24,95,165,.15)',ti:'Shopify Hazırlık & Kurulum',ts:[
@@ -710,3 +741,509 @@ function renderSB(){
   });
 }
 
+function selF(id){
+  aid=id;fm='all';ftg='hepsi';const f=gf(id);renderSB();
+  document.getElementById('pt').textContent=f.name;
+  document.getElementById('ps').textContent=(f.mods||[]).map(m=>MM[m]?.l||m).join(' + ')||'Özel Proje';
+  if(!ism)document.getElementById('ta').style.display='flex';
+  document.getElementById('stats').style.display='grid';document.getElementById('pw').style.display='block';
+  document.getElementById('nb').style.display=settings.whUrl?'flex':'none';
+  renderInfoCards(f);
+  renderMT(f);renderSt(f);renderGs(f);
+}
+function renderInfoCards(f){
+  const el=document.getElementById('infocards');
+  const items=[];
+  if(f.contact)items.push({ico:'👤',lbl:'Yetkili',val:f.contact});
+  if(f.phone)items.push({ico:'📞',lbl:'Telefon',val:f.phone});
+  if(f.email)items.push({ico:'✉️',lbl:'E-posta',val:f.email});
+  if(!items.length){
+    el.style.display='flex';
+    el.innerHTML='<button class="btn bgh bsm" onclick="openEdit()">✏️ İletişim Bilgisi Ekle</button>';
+    return;
+  }
+  el.style.display='flex';
+  el.innerHTML=items.map((it,i)=>`<div class="icard" onclick="copyInfo(this,'${it.val.replace(/'/g,"\\'")}')"><div><div class="icard-lbl">${it.ico} ${it.lbl}</div><div class="icard-val">${it.val}</div></div><span class="icard-ico">📋</span></div>`).join('')
+    +'<button class="btn bgh bsm" style="margin-left:4px;align-self:center" onclick="openEdit()">✏️ Düzenle</button>';
+}
+function copyInfo(el,val){
+  navigator.clipboard.writeText(val).catch(()=>{});
+  el.classList.add('copied');
+  const orig=el.querySelector('.icard-val').textContent;
+  el.querySelector('.icard-val').textContent='Kopyalandı!';
+  setTimeout(()=>{el.classList.remove('copied');el.querySelector('.icard-val').textContent=orig;},1500);
+}
+function renderMT(f){
+  const el=document.getElementById('mtabs');el.style.display='flex';el.innerHTML='';
+  const mk=(lbl,key,ac)=>{const b=document.createElement('button');b.className='mt'+(fm===key?' '+ac:'');b.textContent=lbl;b.onclick=()=>{fm=key;renderMT(f);renderGs(f);};el.appendChild(b);};
+  mk('Tümü','all','on-all');
+  (f.mods||[]).forEach(m=>{const mm=MM[m];if(mm)mk(mm.i+' '+mm.l,m,'on-'+m);});
+  if((f.ct||[]).length)mk('✏️ Özel','oz','on-oz');
+  el.innerHTML+='<div class="msep"></div>';
+  ['hepsi','kritik','teknik','tasarim','icerik','test'].forEach(tag=>{
+    const b=document.createElement('button');b.className='fc'+(ftg===tag?' on':'');
+    b.textContent=TL[tag]||tag;b.onclick=()=>{ftg=tag;renderMT(f);renderGs(f);};el.appendChild(b);
+  });
+}
+function renderSt(f){
+  const p=getProg(f);const all=getGs(f).flatMap(g=>g.ts);
+  const kr=all.filter(t=>t.tg.includes('kritik'));const kd=kr.filter(t=>f.tasks[t.id]).length;
+  document.getElementById('st').textContent=p.total;document.getElementById('sd').textContent=p.done;
+  document.getElementById('sp').textContent=p.pct+'%';document.getElementById('sl').textContent=p.total-p.done;
+  document.getElementById('scr').textContent=kd+'/'+kr.length+' kritik';document.getElementById('pf').style.width=p.pct+'%';
+}
+function renderGs(f){
+  const w=document.getElementById('gw');w.innerHTML='';
+  let gs=getGs(f);
+  if(fm!=='all'){if(fm==='oz')gs=gs.filter(g=>g.isC);else gs=gs.filter(g=>T[fm]?.some(x=>x.id===g.id));}
+  if(!gs.length){w.innerHTML='<div class="empty"><div class="eico">✅</div><div class="etit">Bu modülde görev yok</div></div>';return;}
+  gs.forEach(grp=>{
+    let tasks=grp.ts;if(ftg!=='hepsi')tasks=tasks.filter(t=>t.tg.includes(ftg));if(!tasks.length)return;
+    const done=tasks.filter(t=>f.tasks[t.id]).length;const pct=Math.round(done/tasks.length*100);
+    let gmod='sh';for(const[m,gs2]of Object.entries(T)){if(gs2.some(g=>g.id===grp.id)){gmod=m;break;}}
+    const mm=MM[gmod]||{i:'✏️',c:'#A07DD0'};
+    const el=document.createElement('div');el.className='grp';
+    const ab=!ism?'<button class="btn bgh bsm" style="font-size:10px;padding:2px 8px;margin-left:4px" onclick="event.stopPropagation();openCT(\''+grp.id+'\',\''+grp.ti.replace(/'/g,"\\'")+'\')" >+ Görev</button>':'';
+    el.innerHTML='<div class="gh" onclick="togG(\''+grp.id+'\')"><span class="glb" style="background:'+grp.bg+';color:'+grp.c+'">'+grp.lb+'</span><span class="gico">'+mm.i+'</span><span class="gtit">'+grp.ti+'</span><span class="gmet">'+done+'/'+tasks.length+'</span>'+ab+'<span class="gcv op" id="gcv'+grp.id+'">▶</span></div><div class="gbar"><div class="gbf" style="width:'+pct+'%;background:'+grp.c+'"></div></div><div class="tl op" id="tl'+grp.id+'">'+tasks.map(t=>tH(t,f)).join('')+'</div>';
+    w.appendChild(el);
+  });
+}
+function tH(t,f){
+  const d=!!f.tasks[t.id];
+  const tgs=t.tg.map(tg=>'<span class="tg '+(TC[tg]||'')+'">'+(TL[tg]||tg)+'</span>').join('');
+  const dl=(!ism&&t.isC)?'<button class="tdl" onclick="event.stopPropagation();delCT(\''+t.id+'\')">✕</button>':'';
+  return '<div class="tr'+(d?' dn':'')+'" onclick="togT(\''+t.id+'\')"><div class="ck'+(d?' on':'')+'"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tb"><div class="tn">'+t.n+'</div>'+(t.nt?'<div class="tnt">'+t.nt+'</div>':'')+'<div class="tgs">'+tgs+'</div></div>'+dl+'</div>';
+}
+function togG(id){document.getElementById('tl'+id)?.classList.toggle('op');document.getElementById('gcv'+id)?.classList.toggle('op');}
+async function togT(tid){
+  if(ism){toast('Sadece görüntüleme','');return;}
+  const f=gf(aid);const was=!!f.tasks[tid];
+  // İlk görev tamamlandığında başlangıç zamanı kaydet
+  if(!was&&!f.startedAt){f.startedAt=new Date().toISOString();}
+  f.tasks[tid]=!was;sv();renderSt(f);renderGs(f);renderSB();
+  if(!was&&f.wh?.url){
+    const task=getGs(f).flatMap(g=>g.ts).find(t=>t.id===tid);
+    if(task){
+      const p=getProg(f);
+      if(p.done===p.total&&p.total>0){
+        // Tüm görevler tamamlandı — proje tamamlama maili
+        await sendWH(f,task,'project_completed');
+      } else {
+        // Normal adım bildirimi
+        await sendWH(f,task,'task_completed');
+      }
+    }
+  }
+}
+function openCT(gid,gti){pgid=gid;pgti=gti;document.getElementById('ct-lbl').textContent='"'+gti+'" grubuna özel görev ekle';document.getElementById('ct-n').value='';document.getElementById('ct-nt').value='';document.getElementById('m-ct').classList.add('op');setTimeout(()=>document.getElementById('ct-n').focus(),100);}
+function saveCT(){
+  const n=document.getElementById('ct-n').value.trim();if(!n){toast('Görev adı girin','',true);return;}
+  const f=gf(aid);if(!f.ct)f.ct=[];
+  f.ct.push({id:'ct'+Date.now(),gid:pgid,gti:pgti,n,nt:document.getElementById('ct-nt').value.trim()});
+  sv();closeM('m-ct');const ff=gf(aid);renderMT(ff);renderGs(ff);renderSt(ff);renderSB();toast('Görev eklendi',n);
+}
+function delCT(tid){if(!confirm('Bu görevi silmek istiyor musunuz?'))return;const f=gf(aid);f.ct=(f.ct||[]).filter(c=>c.id!==tid);delete f.tasks[tid];sv();renderGs(f);renderSt(f);renderSB();toast('Silindi','');}
+function togM(m){
+  if(m==='oz'){sm.clear();sm.add('oz');}else{sm.delete('oz');sm.has(m)?sm.delete(m):sm.add(m);}
+  ['sh','mt','gg','oz'].forEach(k=>{
+    const card=document.getElementById('mc-'+k);const chk=document.getElementById('mck-'+k);const sel=sm.has(k);
+    const cls={sh:'s-sh',mt:'s-mt',gg:'s-gg',oz:'s-oz'}[k];
+    card.className='mc'+(sel?' '+cls:'');
+    chk.innerHTML=sel?'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'';
+    chk.style.cssText=sel?'background:var(--gold);border-color:var(--gold)':'';
+  });
+}
+function openAdd(){sm.clear();['sh','mt','gg','oz'].forEach(m=>{document.getElementById('mc-'+m).className='mc';document.getElementById('mck-'+m).innerHTML='';document.getElementById('mck-'+m).style.cssText='';});document.getElementById('i-name').value='';document.getElementById('i-contact').value='';document.getElementById('i-phone').value='';document.getElementById('i-email').value='';document.getElementById('m-add').classList.add('op');setTimeout(()=>document.getElementById('i-name').focus(),100);}
+function addFirm(){
+  const name=document.getElementById('i-name').value.trim();
+  if(!name){toast('Firma adı girin','',true);return;}if(!sm.size){toast('En az bir modül seçin','',true);return;}
+  const mods=sm.has('oz')?[]:([...sm]);
+  const id=slug(name)+'-'+Date.now();
+  firms.push({id,name,mods,tasks:{},ct:[],
+    contact:document.getElementById('i-contact').value.trim(),
+    phone:document.getElementById('i-phone').value.trim(),
+    email:document.getElementById('i-email').value.trim(),
+
+    created:new Date().toISOString()});
+  sv();closeM('m-add');renderSB();selF(id);
+  toast(name+' oluşturuldu',(mods.map(m=>MM[m]?.l||m).join(' + ')||'Özel')+' modülleri yüklendi');
+  setTimeout(()=>{const nf=gf(id);if(nf.wh?.url)sendWH(nf,null,'project_created');},300);
+}
+async function testWebhook(){
+  const url=document.getElementById('s-wh-url').value.trim();
+  const res=document.getElementById('wh-test-result');
+  if(!url){
+    res.style.display='block';res.style.background='var(--rdbg)';res.style.color='var(--rd)';
+    res.textContent='❌ Önce webhook URL girin';return;
+  }
+  res.style.display='block';res.style.background='var(--d3)';res.style.color='var(--tx2)';
+  res.textContent='⏳ Test gönderiliyor...';
+  const payload={
+    event:'test',firm_name:'TEST',customer_name:'Test Kullanıcı',customer_email:'test@test.com',
+    email_subject:'n8n Webhook Test — Ajans Paneli',
+    email_body:'Bu bir test mesajıdır. Webhook bağlantısı başarılı!',
+    email_html:mailHtml('Webhook Test ✅','n8n bağlantısı başarılı!','<p style="font-size:16px;color:#2A2A28;margin:0 0 12px">Webhook bağlantısı başarıyla test edildi.</p><p style="color:#555;line-height:1.7;margin:0">Ajans panelinden gönderilen bildirimler bu şablonla iletilecek.</p>',0,0,'Test'),
+    sent_at:new Date().toISOString()
+  };
+  try{
+    await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+    res.style.background='var(--grbg)';res.style.color='var(--gr)';
+    res.textContent='✅ İstek gönderildi! n8n ekranında "Listen for test event" aktifse veri gelmiş olmalı.';
+  }catch(e){
+    res.style.background='var(--rdbg)';res.style.color='var(--rd)';
+    res.textContent='❌ Hata: '+e.message;
+  }
+}
+function openSettings(){
+  document.getElementById('s-wh-url').value=settings.whUrl||'';
+  document.getElementById('m-settings').classList.add('op');
+  setTimeout(()=>document.getElementById('s-wh-url').focus(),100);
+}
+function saveSettings(){
+  settings.whUrl=document.getElementById('s-wh-url').value.trim();
+  svSettings();
+  closeM('m-settings');
+  updateWHStatus();
+  // Aktif firma varsa n8n banner güncelle
+  if(aid){const f=gf(aid);document.getElementById('nb').style.display=settings.whUrl?'flex':'none';}
+  toast('Ayarlar kaydedildi', settings.whUrl ? '✅ Webhook aktif' : 'Webhook URL girilmedi');
+}
+function updateWHStatus(){
+  const el=document.getElementById('wh-status');
+  if(!el)return;
+  if(settings.whUrl){
+    const short=settings.whUrl.replace('https://','').substring(0,30)+'...';
+    el.innerHTML='<div class="wh-dot on"></div><span>Webhook aktif</span>';
+    el.style.color='var(--gr)';
+  } else {
+    el.innerHTML='<div class="wh-dot"></div><span>Webhook kurulmadı</span>';
+    el.style.color='var(--tx3)';
+  }
+}
+function mailHtml(title, preheader, bodyHtml, progressDone, progressTotal, firmName){
+  const pct = progressTotal ? Math.round(progressDone/progressTotal*100) : 0;
+  const barW = pct;
+  const progHtml = progressTotal ? `
+    <div style="margin:24px 0 8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#888;margin-bottom:6px">
+        <span>İlerleme</span><span>${progressDone}/${progressTotal} adım · %${pct}</span>
+      </div>
+      <div style="background:#f0f0f0;border-radius:99px;height:8px;overflow:hidden">
+        <div style="background:linear-gradient(90deg,#8A6128,#B8843A);height:100%;width:${barW}%;border-radius:99px"></div>
+      </div>
+    </div>` : '';
+  return `<!DOCTYPE html>
+<html lang="tr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${title}</title></head>
+<body style="margin:0;padding:0;background:#f4f1ec;font-family:'Segoe UI',Arial,sans-serif">
+<div style="display:none;max-height:0;overflow:hidden;color:#f4f1ec">${preheader}</div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ec;padding:32px 16px">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px">
+
+  <!-- HEADER -->
+  <tr><td style="background:linear-gradient(135deg,#2A2A28 0%,#3E3E3C 100%);border-radius:16px 16px 0 0;padding:32px 36px;text-align:center">
+    <div style="font-size:11px;letter-spacing:3px;color:#B8843A;text-transform:uppercase;margin-bottom:8px">Ajans Paneli</div>
+    <div style="font-size:22px;font-weight:700;color:#ffffff;line-height:1.3">${title}</div>
+    <div style="width:40px;height:2px;background:#B8843A;margin:16px auto 0;border-radius:99px"></div>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:#ffffff;padding:32px 36px">
+    ${bodyHtml}
+    ${progHtml}
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#2A2A28;border-radius:0 0 16px 16px;padding:20px 36px;text-align:center">
+    <div style="font-size:11px;color:#5A5652;line-height:1.7">
+      Bu e-posta <strong style="color:#B8843A">${firmName}</strong> projesi kapsamında otomatik gönderilmiştir.<br>
+      Sorularınız için ajansınızla iletişime geçin.
+    </div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function sendWH(f,task,eventType){
+  const p=getProg(f);
+  const mods=(f.mods||[]).map(m=>MM[m]?.l||m).join(' + ');
+  const now=new Date().toISOString();
+  // Süre hesapla
+  const startMs=f.startedAt?new Date(f.startedAt).getTime():new Date(f.created).getTime();
+  const totalHours=Math.round((Date.now()-startMs)/1000/3600*10)/10;
+  let payload={};
+  if(eventType==='project_created'){
+    payload={
+      event:'project_created',
+      firm_name:f.name,
+      customer_name:f.contact||'',
+      customer_email:f.email||'',
+      modules:mods,
+      total_tasks:p.total,
+      created_at:now,
+      email_subject:f.name+' — Projeniz Başladı 🚀',
+      email_body:'Merhaba '+(f.contact||'Sayın Müşterimiz')+', '+f.name+' projeniz başlatıldı. Toplam '+p.total+' adım.',
+      email_html:mailHtml(f.name+' Projeniz Başladı 🚀','Projeniz başlatıldı. Toplam '+p.total+' adım tamamlanacak.','<p style="font-size:16px;color:#2A2A28;margin:0 0 20px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 24px">'+f.name+' için <strong>'+mods+'</strong> kurulum projeniz başarıyla başlatıldı. Her önemli adımda sizi bilgilendireceğiz.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;border-radius:12px;padding:20px"><tr><td style="font-size:12px;color:#888;padding-bottom:4px">Hizmet Modülleri</td></tr><tr><td style="font-size:16px;font-weight:600;color:#2A2A28">'+mods+'</td></tr><tr><td style="padding-top:16px;font-size:12px;color:#888;padding-bottom:4px">Toplam Adım</td></tr><tr><td style="font-size:28px;font-weight:700;color:#B8843A">'+p.total+' adım</td></tr></table>',0,0,f.name)
+    };
+  } else if(eventType==='task_completed'){
+    payload={
+      event:'task_completed',
+      firm_name:f.name,
+      customer_name:f.contact||'',
+      customer_email:f.email||'',
+      task_name:task.n,
+      task_tags:task.tg,
+      progress_done:p.done,
+      progress_total:p.total,
+      progress_pct:p.pct,
+      completed_at:now,
+      email_subject:f.name+' — Adım Tamamlandı (%'+p.pct+')',
+      email_body:'"'+task.n+'" adımı tamamlandı. İlerleme: '+p.done+'/'+p.total+' adım (%'+p.pct+')',
+      email_html:mailHtml('Adım Tamamlandı ✅','Tamamlandı','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><div style="background:#f0faf5;border:1px solid #c3e8d5;border-radius:12px;padding:20px;margin-bottom:16px"><div style="font-size:11px;color:#4CAF7D;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">✅ Tamamlanan Adım</div><div style="font-size:17px;font-weight:600;color:#2A2A28">'+task.n+'</div></div><p style="color:#555;line-height:1.7;margin:0">'+f.name+' projesi kapsamında bu adım tamamlandı.</p>',p.done,p.total,f.name),
+      email_body:'Adim tamamlandi.'
+    };
+  }
+  const whUrl=settings.whUrl||'';
+  if(!whUrl)return;
+  if(f.whEnabled===false)return;
+  try{
+    const ctrl=new AbortController();
+    setTimeout(()=>ctrl.abort(),10000);
+    const res=await fetch(whUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal}).catch(async()=>{
+      // CORS hatası durumunda no-cors ile tekrar dene (n8n production URL için)
+      return await fetch(whUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),mode:'no-cors'});
+    });
+    if(eventType==='project_created')toast('📧 Proje başlangıç maili gönderildi','');
+    else if(eventType==='task_completed')toast('📧 Adım bildirimi gönderildi',task.n);
+    else if(eventType==='project_completed')toast('📧 Proje tamamlama özeti gönderildi','');
+  }catch(e){toast('Webhook hatası','',true);}
+}
+// ── TAG SEÇİCİ ──────────────────────────────────────────────
+function togCTTag(el){
+  const active=el.dataset.active==='1';
+  if(active){el.dataset.active='0';el.style.background='transparent';}
+  else{el.dataset.active='1';el.style.background=getComputedStyle(el).borderColor.replace('rgb','rgba').replace(')',',0.15)');}
+}
+function getCTSelectedTags(){
+  return Array.from(document.querySelectorAll('.ct-tag[data-active="1"]')).map(el=>el.dataset.tag);
+}
+function resetCTTags(){
+  document.querySelectorAll('.ct-tag').forEach(el=>{el.dataset.active='0';el.style.background='transparent';});
+}
+
+// ── REKLAM ID ────────────────────────────────────────────────
+function renderAdIds(f){
+  const el=document.getElementById('adids-row');if(!el)return;
+  el.innerHTML='';
+  const card=(ico,lbl,val)=>{
+    const d=document.createElement('div');d.className='adid-card';d.onclick=openAdIds;d.title='Düzenle';
+    d.innerHTML='<span style="font-size:14px">'+ico+'</span><div><div class="adid-lbl">'+lbl+'</div><div class="adid-val '+(val?'':'adid-empty')+'">'+(val||'ID Ekle')+'</div></div>';
+    return d;
+  };
+  el.appendChild(card('🔍','Google Ads ID',f.googleAdsId||''));
+  el.appendChild(card('📘','Meta Ads ID',f.metaAdsId||''));
+}
+function openAdIds(){
+  const f=gf(aid);if(!f)return;
+  document.getElementById('inp-google-id').value=f.googleAdsId||'';
+  document.getElementById('inp-meta-id').value=f.metaAdsId||'';
+  document.getElementById('m-adids').classList.add('op');
+  setTimeout(()=>document.getElementById('inp-google-id').focus(),100);
+}
+async function saveAdIds(){
+  const f=gf(aid);if(!f)return;
+  const gId=document.getElementById('inp-google-id').value.trim();
+  const mId=document.getElementById('inp-meta-id').value.trim();
+  const ok=await dbSaveAdIds(f.id,gId,mId);
+  if(ok){f.googleAdsId=gId;f.metaAdsId=mId;const idx=firms.findIndex(x=>x.id===f.id);if(idx>=0)firms[idx]=f;closeM('m-adids');renderAdIds(f);toast('Reklam IDleri kaydedildi','');}
+  else toast('Kayıt hatası','',true);
+}
+
+// ── NOTLAR ──────────────────────────────────────────────────
+async function openNotes(){
+  const f=gf(aid);if(!f)return;
+  document.getElementById('notes-title').textContent=f.name+' — Notlar';
+  document.getElementById('notes-sub').textContent='Yeniden eskiye sıralı';
+  document.getElementById('notes-list').innerHTML='<div class="fd-empty">⏳ Yükleniyor...</div>';
+  document.getElementById('m-notes').classList.add('op');
+  document.getElementById('note-inp').value='';
+  renderNotes(await dbLoadNotes(f.id));
+  setTimeout(()=>document.getElementById('note-inp').focus(),200);
+}
+function renderNotes(notes){
+  const el=document.getElementById('notes-list');
+  if(!notes.length){el.innerHTML='<div class="fd-empty" style="padding:30px">Henüz not yok.</div>';return;}
+  el.innerHTML=notes.map(n=>{
+    const d=new Date(n.created_at).toLocaleString('tr-TR');
+    return '<div class="note-item"><button class="note-del" onclick="deleteNote('+n.id+')">✕</button><div class="note-text">'+n.note.replace(/</g,'&lt;')+'</div><div class="note-date">📅 '+d+'</div></div>';
+  }).join('');
+}
+async function addNote(){
+  const f=gf(aid);if(!f)return;
+  const txt=document.getElementById('note-inp').value.trim();if(!txt)return;
+  document.getElementById('note-inp').value='';
+  const n=await dbAddNote(f.id,txt);
+  if(n)renderNotes(await dbLoadNotes(f.id));
+  toast('Not eklendi','');
+}
+async function deleteNote(id){
+  if(!confirm('Bu notu silmek istiyor musunuz?'))return;
+  await dbDeleteNote(id);renderNotes(await dbLoadNotes(gf(aid).id));
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var inp=document.getElementById('note-inp');
+  if(inp)inp.addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();addNote();}});
+});
+
+// ── FORM VERİLERİ ────────────────────────────────────────────
+async function openFormData(){
+  const f=gf(aid);if(!f)return;
+  document.getElementById('fd-title').textContent=f.name+' — Müşteri Form Bilgileri';
+  document.getElementById('fd-subtitle').textContent='Sametsalik.com reklam detay formu';
+  document.getElementById('fd-content').innerHTML='<div class="fd-empty">⏳ Yükleniyor...</div>';
+  document.getElementById('m-formdata').classList.add('op');
+  const linked=await dbLoadFormForFirm(f.id);
+  if(linked)renderFormData(linked);
+  else renderFormSelector(await dbLoadAllSubmissions());
+}
+async function linkFormToFirm(subId){
+  const f=gf(aid);if(!f)return;
+  if(await dbLinkFormToFirm(subId,f.id)){toast('Form bağlandı','✅');const fd=await dbLoadFormById(subId);renderFormData(fd);}
+  else toast('Hata','',true);
+}
+function renderFormSelector(submissions){
+  var el=document.getElementById('fd-content');
+  if(!submissions.length){el.innerHTML='<div class="fd-empty">Henüz form verisi yok.</div>';return;}
+  el.innerHTML='<div style="font-size:12px;color:var(--tx3);margin-bottom:12px">Bu firmaya bagli form yok. Asagidan sec:</div>';
+  submissions.forEach(function(s){
+    var d=s.data&&s.data.body?s.data.body:(s.data||{});
+    var brand=s.brand||d.brand||'-';
+    var name=s.name||d.name||'-';
+    var email=s.email||d.email||'-';
+    var date=s.submitted_at?new Date(s.submitted_at).toLocaleString('tr-TR'):'';
+    var sid=s.id;
+    var row=document.createElement('div');
+    row.style.cssText='background:var(--d3);border:1px solid var(--bd2);border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;margin-bottom:8px';
+    var info=document.createElement('div');
+    info.style.flex='1';
+    info.innerHTML=(
+      '<div style="font-size:13px;font-weight:600;color:var(--tx)">'+brand+'</div>'+
+      '<div style="font-size:11px;color:var(--tx3);margin-top:2px">'+name+' - '+email+'</div>'+
+      '<div style="font-size:10px;color:var(--tx3);margin-top:2px">'+date+'</div>'
+    );
+    var btn=document.createElement('button');
+    btn.textContent='Bagla';
+    btn.style.cssText='padding:6px 14px;border-radius:8px;border:1px solid rgba(184,132,58,.4);background:var(--gbg);color:var(--gold);font-size:12px;cursor:pointer';
+    btn.addEventListener('click',function(){linkFormToFirm(sid);});
+    row.appendChild(info);row.appendChild(btn);
+    row.addEventListener('mouseover',function(){this.style.borderColor='var(--gold)';});
+    row.addEventListener('mouseout',function(){this.style.borderColor='var(--bd2)';});
+    el.appendChild(row);
+  });
+}
+
+async function unlinkForm(subId){
+  await sb.from('form_submissions').update({firm_id:null}).eq('id',subId);
+  toast('Bağlantı kaldırıldı','');
+  renderFormSelector(await dbLoadAllSubmissions());
+}
+function renderFormData(fd){
+  const el=document.getElementById('fd-content');
+  if(!fd){el.innerHTML='<div class="fd-empty">📭 Form verisi yok.</div>';return;}
+  var d=fd.data||{};
+  if(typeof d==='string'){try{d=JSON.parse(d);}catch(e){d={};}}
+  if(d.body&&typeof d.body==='object')d=d.body;
+  if(!Object.keys(d).length)d=fd;
+  const date=fd.submitted_at?new Date(fd.submitted_at).toLocaleString('tr-TR'):'';
+  const sec=(lbl,fields)=>{
+    const rows=fields.filter(f=>d[f.k]).map(f=>'<div class="fd-item'+(f.full?' full':'')+'"><div class="fd-lbl">'+f.l+'</div><div class="fd-val">'+(d[f.k]||'—')+'</div></div>').join('');
+    if(!rows)return '';
+    return '<div class="fd-card"><div class="fd-card-title">'+lbl+'</div><div class="fd-row">'+rows+'</div></div>';
+  };
+  el.innerHTML=
+    sec('Temel Bilgiler',[{k:'name',l:'Ad Soyad'},{k:'brand',l:'Marka'},{k:'email',l:'E-posta'},{k:'phone',l:'Telefon'},{k:'sector',l:'Sektör'},{k:'website',l:'Web Sitesi',full:true}])+
+    sec('Reklam Platformları',[{k:'meta',l:'Meta'},{k:'google',l:'Google'},{k:'fb_page',l:'Facebook'},{k:'instagram',l:'Instagram'},{k:'ga',l:'Google Analytics'},{k:'ym',l:'Yandex'}])+
+    sec('Panel Erişimi',[{k:'admin_url',l:'Admin URL',full:true},{k:'admin_user',l:'Kullanıcı'},{k:'admin_pass',l:'Şifre'}])+
+    sec('Strateji',[{k:'summary',l:'Özet',full:true},{k:'products',l:'Ürünler',full:true},{k:'regions',l:'Bölgeler',full:true},{k:'diff',l:'Fark',full:true}])+
+    sec('Bütçe',[{k:'budget',l:'Bütçe Tercihi',full:true},{k:'budget_note',l:'Bütçe Notu',full:true},{k:'avg_revenue',l:'Ortalama Gelir'},{k:'prev_ads',l:'Önceki Reklam'}])+
+    (date?'<div class="fd-date" style="display:flex;align-items:center;justify-content:space-between"><span>📅 '+date+'</span><button onclick="unlinkForm('+fd.id+')" style="font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--bd2);background:var(--d3);color:var(--tx3);cursor:pointer">↩ Bağlantıyı Kaldır</button></div>':'');
+}
+
+// ── MODÜL DÜZENLEME ──────────────────────────────────────────
+function togEditMod(m){
+  const card=document.getElementById('emc-'+m);
+  const chk=document.getElementById('emck-'+m);
+  const active=card.dataset.active==='1';
+  card.dataset.active=active?'0':'1';
+  const cls={sh:'s-sh',mt:'s-mt',gg:'s-gg'}[m];
+  card.className='mc'+(active?'':' '+cls);
+  chk.innerHTML=active?'':'<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  chk.style.cssText=active?'':'background:var(--gold);border-color:var(--gold)';
+}
+
+
+function openEdit(){
+  const f=gf(aid);if(!f)return;
+  document.getElementById('edit-firm-name').textContent=f.name+' — İletişim Bilgileri';
+  document.getElementById('edit-name').value=f.name||'';
+  document.getElementById('edit-contact').value=f.contact||'';
+  document.getElementById('edit-phone').value=f.phone||'';
+  document.getElementById('edit-email').value=f.email||'';
+  document.getElementById('m-edit').classList.add('op');
+  setTimeout(()=>document.getElementById('edit-name').focus(),100);
+}
+function saveEdit(){
+  const f=gf(aid);if(!f)return;
+  const newName=document.getElementById('edit-name').value.trim();
+  if(!newName){toast('Firma adı boş olamaz','',true);return;}
+  f.name=newName;
+  f.contact=document.getElementById('edit-contact').value.trim();
+  f.phone=document.getElementById('edit-phone').value.trim();
+  f.email=document.getElementById('edit-email').value.trim();
+  sv();closeM('m-edit');
+  document.getElementById('pt').textContent=f.name;
+  renderInfoCards(f);
+  renderSB();
+  toast('Bilgiler güncellendi','');
+}
+function delFirm(id){
+  const f=gf(id);if(!f)return;
+  if(!confirm('"'+f.name+'" firmasını ve tüm görev verilerini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz.'))return;
+  firms=firms.filter(x=>x.id!==id);sv();
+  if(aid===id){
+    aid=null;
+    document.getElementById('pt').textContent='Firma Seç';
+    document.getElementById('ps').textContent='Sol panelden bir firma seçin';
+    document.getElementById('ta').style.display='none';
+    document.getElementById('stats').style.display='none';
+    document.getElementById('pw').style.display='none';
+    document.getElementById('nb').style.display='none';
+    document.getElementById('mtabs').style.display='none';
+    document.getElementById('gw').innerHTML='<div class="empty"><div class="eico">🏗</div><div class="etit">Firma seçilmedi</div><div>Sol panelden seçin veya yeni ekleyin</div></div>';
+    if(firms.length>0)selF(firms[0].id);
+  }
+  renderSB();
+  toast(f.name+' silindi','');
+}
+function resetF(){if(!aid||!confirm('Tüm tamamlanan görevler sıfırlanacak. Emin misiniz?'))return;const f=gf(aid);f.tasks={};sv();renderSt(f);renderGs(f);renderSB();toast('Sıfırlandı','');}
+function copyLink(){if(!aid)return;const f=gf(aid);const url=location.origin+location.pathname+'?firma='+slug(f.name)+'&musteri=1';navigator.clipboard.writeText(url).catch(()=>{});toast('Müşteri linki kopyalandı!',url);}
+function closeM(id){document.getElementById(id).classList.remove('op');}
+document.querySelectorAll('.ov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('op')}));
+function toast(title,msg,err){const w=document.getElementById('tw');const t=document.createElement('div');t.className='toast'+(err?' err':'');t.innerHTML='<div class="ttit">'+title+'</div>'+(msg?'<div>'+msg+'</div>':'');w.appendChild(t);setTimeout(()=>t.remove(),4000);}
+function init(){
+  const p=new URLSearchParams(location.search);const fp=p.get('firma'),mp=p.get('musteri')==='1';
+  if(fp){const m=firms.find(f=>slug(f.name)===fp);if(m){if(mp){ism=true;document.querySelector('.sb').style.display='none';document.getElementById('ta').style.display='none';const b=document.getElementById('mban');b.style.display='flex';document.getElementById('mbantxt').innerHTML='Bu sayfa <strong>'+m.name+'</strong> projenizin anlık durumunu göstermektedir.';}renderSB();selF(m.id);return;}}
+  renderSB();selF(firms[0].id);
+}
+
+init();
+updateWHStatus();
+
+</script>
+</body>
+</html>
