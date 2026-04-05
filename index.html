@@ -1051,19 +1051,41 @@ async function sendWH(f,task,eventType){
       email_html:mailHtml('Adım Tamamlandı ✅','Tamamlandı','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><div style="background:#f0faf5;border:1px solid #c3e8d5;border-radius:12px;padding:20px;margin-bottom:16px"><div style="font-size:11px;color:#4CAF7D;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">✅ Tamamlanan Adım</div><div style="font-size:17px;font-weight:600;color:#2A2A28">'+task.n+'</div></div><p style="color:#555;line-height:1.7;margin:0">'+f.name+' projesi kapsamında bu adım tamamlandı.</p>',p.done,p.total,f.name)
     };
   } else if(eventType==='project_completed'){
-    const startDate=f.startedAt?new Date(f.startedAt).toLocaleDateString('tr-TR'):new Date(f.created).toLocaleDateString('tr-TR');
+    const startDate=f.startedAt?new Date(f.startedAt).toLocaleDateString('tr-TR'):new Date(f.created||now).toLocaleDateString('tr-TR');
     const mods2=(f.mods||[]).map(m=>MM[m]?.l||m).join(', ')||'Özel Görevler';
+    // Tamamlanan tüm görevleri listele
+    const allTasks=getGs(f).flatMap(g=>g.ts);
+    const completedTasks=allTasks.filter(t=>!!f.tasks[t.id]);
+    const taskListHtml=completedTasks.map(t=>
+      '<tr><td style="padding:8px 16px;border-bottom:1px solid #e8f5ee;">'+
+      '<div style="display:flex;align-items:center;gap:8px;">'+
+      '<span style="color:#4CAF7D;font-size:14px;">✅</span>'+
+      '<span style="font-size:13px;color:#2A2A28;font-weight:500;">'+t.n+'</span>'+
+      '</div></td></tr>'
+    ).join('');
     payload={
       event:'project_completed',
       firm_name:f.name,
       customer_name:f.contact||'',
       customer_email:f.email||'',
       total_tasks:p.total,
-      total_hours:totalHours,
       completed_at:now,
       email_subject:'🎉 '+f.name+' — Tüm Talepler Tamamlandı!',
-      email_body:'Tüm görevler tamamlandı. '+p.total+' adım, '+totalHours+' saatte bitirildi.',
-      email_html:mailHtml('Tüm Talepler Tamamlandı! 🎉','Proje Tamamlandı','<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 24px"><strong>'+f.name+'</strong> kapsamındaki tüm talepleriniz başarıyla yerine getirildi. Firmanızda şu an aktif bekleyen görev bulunmamaktadır.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0faf5;border:1px solid #c3e8d5;border-radius:12px;padding:20px;margin-bottom:20px"><tr><td><div style="font-size:11px;color:#4CAF7D;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">✅ Proje Özeti</div><table width="100%" cellpadding="0" cellspacing="0"><tr><td style="font-size:13px;color:#888;padding-bottom:6px;width:50%">Hizmet Kapsamı</td><td style="font-size:13px;font-weight:600;color:#2A2A28;padding-bottom:6px">'+mods2+'</td></tr><tr><td style="font-size:13px;color:#888;padding-bottom:6px">Toplam Adım</td><td style="font-size:28px;font-weight:700;color:#B8843A;padding-bottom:6px">'+p.total+' adım</td></tr><tr><td style="font-size:13px;color:#888;padding-bottom:6px">Başlangıç Tarihi</td><td style="font-size:13px;font-weight:600;color:#2A2A28;padding-bottom:6px">'+startDate+'</td></tr><tr><td style="font-size:13px;color:#888">Geçen Süre</td><td style="font-size:13px;font-weight:600;color:#2A2A28">'+totalHours+' saat</td></tr></table></td></tr></table><p style="color:#555;line-height:1.7;margin:0 0 16px">Herhangi bir konuda destek almak veya yeni bir proje başlatmak için bizimle iletişime geçebilirsiniz.</p>',p.total,p.total,f.name)
+      email_body:'Tüm görevler tamamlandı. '+p.total+' adım tamamlandı.',
+      email_html:mailHtml('Tüm Talepler Tamamlandı! 🎉','Proje Tamamlandı',
+        '<p style="font-size:16px;color:#2A2A28;margin:0 0 16px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p>'+
+        '<p style="color:#555;line-height:1.7;margin:0 0 24px"><strong>'+f.name+'</strong> kapsamındaki tüm talepleriniz başarıyla yerine getirildi. Firmanızda şu an aktif bekleyen görev bulunmamaktadır.</p>'+
+        '<div style="margin-bottom:20px;">'+
+        '<div style="font-size:11px;color:#4CAF7D;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;">✅ Tamamlanan Adımlar ('+completedTasks.length+')</div>'+
+        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0faf5;border:1px solid #c3e8d5;border-radius:12px;overflow:hidden;">'+
+        taskListHtml+
+        '</table></div>'+
+        '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;border-radius:12px;padding:16px 20px;margin-bottom:20px;">'+
+        '<tr><td style="font-size:13px;color:#888;padding-bottom:4px;">Hizmet Kapsamı</td><td style="font-size:13px;font-weight:600;color:#2A2A28;text-align:right;">'+mods2+'</td></tr>'+
+        '<tr><td style="font-size:13px;color:#888;padding-top:8px;">Başlangıç Tarihi</td><td style="font-size:13px;font-weight:600;color:#2A2A28;text-align:right;padding-top:8px;">'+startDate+'</td></tr>'+
+        '</table>'+
+        '<p style="color:#555;line-height:1.7;margin:0;">Herhangi bir konuda destek almak veya yeni bir proje başlatmak için bizimle iletişime geçebilirsiniz.</p>',
+      p.total,p.total,f.name)
     };
   }
   const whUrl=settings.whUrl||'';
