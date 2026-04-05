@@ -595,7 +595,8 @@ function calcScore(lead){
 // ── CRM FONKSİYONLARI ────────────────────────────────────────
 async function switchTab(tab){
   if(tab==='crm'){
-    document.querySelector('.main').style.display='none';
+    document.querySelector('.main').style.visibility='hidden';
+    document.querySelector('.main').style.position='absolute';
     document.getElementById('crm-page').style.display='flex';
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
@@ -609,7 +610,8 @@ async function switchTab(tab){
     });
   } else {
     document.getElementById('crm-page').style.display='none';
-    document.querySelector('.main').style.display='';
+    document.querySelector('.main').style.visibility='';
+    document.querySelector('.main').style.position='';
     document.getElementById('tab-panel').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:none;font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:var(--gold);color:#fff;font-family:inherit';
     document.getElementById('tab-crm').style.cssText='flex:1;padding:5px 0;border-radius:7px;border:1px solid var(--bd2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;background:transparent;color:var(--tx2);font-family:inherit';
   }
@@ -645,7 +647,8 @@ function renderLeads(){
   const sort=document.getElementById('crm-sort')?.value||'score';
   let list=[...leads];
   // Filtre
-  if(crmFilter!=='all') list=list.filter(l=>l.status===crmFilter);
+  if(crmFilter==='notcalled') list=list.filter(l=>!l.gorusme||l.gorusme==='Aranmadı'||l.gorusme==='');
+  else if(crmFilter!=='all') list=list.filter(l=>l.status===crmFilter);
   // Arama
   if(q) list=list.filter(l=>(l.full_name+l.email+l.phone+l.website).toLowerCase().includes(q));
   // Sırala
@@ -664,8 +667,10 @@ function renderLeads(){
     const stTag={new:'tag-new',contacted:'tag-contacted',qualified:'tag-qualified',converted:'tag-converted',lost:'tag-lost'}[l.status]||'tag-new';
     const stLbl={new:'Yeni',contacted:'Arandı',qualified:'Nitelikli',converted:'Satış',lost:'Kayıp'}[l.status]||'Yeni';
     const date=l.created_at?new Date(l.created_at).toLocaleDateString('tr-TR'):'';
-    const butce=l.aylik_butce?'💰 '+l.aylik_butce.substring(0,20):'';
-    const sur=l.reklam_suresi?'⏱ '+l.reklam_suresi.substring(0,20):'';
+    const butce=l.aylik_butce?'💰 '+l.aylik_butce.substring(0,25):'';
+    const sur=l.reklam_suresi?'⏱ '+l.reklam_suresi.substring(0,25):'';
+    const acil=l.acil_ihtiyac&&l.acil_ihtiyac.toLowerCase().includes('evet')?'🚨 Acil destek':'';
+    const mem=l.memnuniyet?'😐 '+l.memnuniyet.substring(0,30):'';
     return `<div class="lead-card" onclick="openLead(${l.id})">
       <div class="lead-score ${scCls}">${sc}</div>
       <div class="lead-info">
@@ -679,6 +684,10 @@ function renderLeads(){
         <div class="lead-meta" style="color:var(--tx2)">
           ${butce?`<span>${butce}</span>`:''}
           ${sur?`<span>${sur}</span>`:''}
+          ${acil?`<span style="color:#ff4e42;font-weight:600">${acil}</span>`:''}
+        </div>
+        <div class="lead-meta" style="color:var(--tx3);font-size:11px">
+          ${mem?`<span>${mem}</span>`:''}
           ${l.source?`<span>📌 ${l.source}</span>`:''}
         </div>
         <div class="lead-tags">
@@ -1800,6 +1809,7 @@ updateWHStatus();
     <input class="crm-search" id="crm-search" placeholder="🔍 İsim, mail, telefon ara..." oninput="renderLeads()">
     <button class="crm-filter on" data-f="all" onclick="setCRMFilter('all',this)">Hepsi</button>
     <button class="crm-filter" data-f="new" onclick="setCRMFilter('new',this)">🆕 Yeni</button>
+    <button class="crm-filter" data-f="notcalled" onclick="setCRMFilter('notcalled',this)">📵 Aranmadı</button>
     <button class="crm-filter" data-f="contacted" onclick="setCRMFilter('contacted',this)">📞 Arandı</button>
     <button class="crm-filter" data-f="qualified" onclick="setCRMFilter('qualified',this)">⭐ Nitelikli</button>
     <button class="crm-filter" data-f="converted" onclick="setCRMFilter('converted',this)">✅ Satış</button>
@@ -1818,4 +1828,3 @@ updateWHStatus();
 
 </div>
 </div><!-- /mainapp -->
->
