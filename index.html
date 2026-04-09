@@ -1022,17 +1022,20 @@ async function sendWH(f,task,eventType){
   const totalHours=Math.round((Date.now()-startMs)/1000/3600*10)/10;
   let payload={};
   if(eventType==='project_created'){
+    const hasModules=p.total>0;
     payload={
       event:'project_created',
       firm_name:f.name,
       customer_name:f.contact||'',
       customer_email:f.email||'',
-      modules:mods,
+      modules:mods||'',
       total_tasks:p.total,
       created_at:now,
-      email_subject:f.name+' — Projeniz Başladı 🚀',
-      email_body:'Merhaba '+(f.contact||'Sayın Müşterimiz')+', '+f.name+' projeniz başlatıldı. Toplam '+p.total+' adım.',
-      email_html:mailHtml(f.name+' Projeniz Başladı 🚀','Projeniz başlatıldı. Toplam '+p.total+' adım tamamlanacak.','<p style="font-size:16px;color:#2A2A28;margin:0 0 20px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 24px">'+f.name+' için <strong>'+mods+'</strong> kurulum projeniz başarıyla başlatıldı. Her önemli adımda sizi bilgilendireceğiz.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;border-radius:12px;padding:20px"><tr><td style="font-size:12px;color:#888;padding-bottom:4px">Hizmet Modülleri</td></tr><tr><td style="font-size:16px;font-weight:600;color:#2A2A28">'+mods+'</td></tr><tr><td style="padding-top:16px;font-size:12px;color:#888;padding-bottom:4px">Toplam Adım</td></tr><tr><td style="font-size:28px;font-weight:700;color:#B8843A">'+p.total+' adım</td></tr></table>',0,0,f.name)
+      email_subject:f.name+(hasModules?' — Projeniz Başladı 🚀':' — Proje Takip Tablonuz Hazır'),
+      email_body:'Merhaba '+(f.contact||'Sayın Müşterimiz')+', '+f.name+(hasModules?' projeniz başlatıldı. Toplam '+p.total+' adım.':' için proje takip tablonuz oluşturuldu.'),
+      email_html:hasModules
+        ?mailHtml(f.name+' Projeniz Başladı 🚀','Projeniz başlatıldı. Toplam '+p.total+' adım tamamlanacak.','<p style="font-size:16px;color:#2A2A28;margin:0 0 20px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 24px">'+f.name+' için <strong>'+mods+'</strong> kurulum projeniz başarıyla başlatıldı. Her önemli adımda sizi bilgilendireceğiz.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;border-radius:12px;padding:20px"><tr><td style="font-size:12px;color:#888;padding-bottom:4px">Hizmet Modülleri</td></tr><tr><td style="font-size:16px;font-weight:600;color:#2A2A28">'+mods+'</td></tr><tr><td style="padding-top:16px;font-size:12px;color:#888;padding-bottom:4px">Toplam Adım</td></tr><tr><td style="font-size:28px;font-weight:700;color:#B8843A">'+p.total+' adım</td></tr></table>',0,0,f.name)
+        :mailHtml(f.name+' Proje Takip Tablonuz Hazır','Proje takip tablonuz oluşturuldu.','<p style="font-size:16px;color:#2A2A28;margin:0 0 20px">Merhaba <strong>'+(f.contact||'Sayın Müşterimiz')+'</strong>,</p><p style="color:#555;line-height:1.7;margin:0 0 24px"><strong>'+f.name+'</strong> için proje takip tablonuz oluşturuldu. Hizmet kapsamı belirlendikçe görev adımları eklenecek ve her önemli adımda sizi bilgilendireceğiz.</p><table width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6f0;border-radius:12px;padding:20px"><tr><td style="font-size:12px;color:#888;padding-bottom:4px">Durum</td></tr><tr><td style="font-size:16px;font-weight:600;color:#2A2A28">Proje Takip Tablosu Oluşturuldu</td></tr></table>',0,0,f.name)
     };
   } else if(eventType==='task_completed'){
     payload={
