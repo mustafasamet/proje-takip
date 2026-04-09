@@ -1324,6 +1324,10 @@ async function saveEdit(){
   if(added.length)msg+=' · '+added.map(m=>MM[m]?.l||m).join(', ')+' eklendi';
   if(removed.length)msg+=' · '+removed.map(m=>MM[m]?.l||m).join(', ')+' kaldırıldı';
   toast(msg,'');
+  // Yeni modül eklendiyse webhook tetikle (proje başlangıç maili)
+  if(added.length > 0 && settings.whUrl && f.whEnabled !== false){
+    setTimeout(()=>sendWH(f, null, 'project_created'), 300);
+  }
 }
 async function delFirm(id){
   const f=gf(id);if(!f)return;
