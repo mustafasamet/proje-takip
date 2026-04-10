@@ -360,6 +360,14 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   </div>
   <div class="macts"><button class="btn bgh" onclick="closeM('m-edit')">İptal</button><button class="btn bgold" onclick="saveEdit()">Kaydet</button></div>
 </div></div>
+<div class="ov" id="m-td">
+<div class="md" style="max-width:460px">
+  <div class="mdtit" id="td-title"></div>
+  <div id="td-nt" style="margin:12px 0 16px;font-size:13px;color:var(--tx2);line-height:1.7;white-space:pre-wrap;background:var(--d3);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;user-select:text;cursor:text;min-height:48px"></div>
+  <div id="td-tags" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px"></div>
+  <div class="macts"><button class="btn bgh" onclick="closeM('m-td')">Kapat</button></div>
+</div></div>
+
 <div class="ov" id="m-ct">
 <div class="md" style="max-width:420px">
   <div class="mdtit">Özel Görev Ekle</div>
@@ -864,9 +872,31 @@ function tH(t,f){
   const d=!!f.tasks[t.id];
   const tgs=t.tg.map(tg=>'<span class="tg '+(TC[tg]||'')+'">'+(TL[tg]||tg)+'</span>').join('');
   const dl=(!ism&&t.isC)?'<button class="tdl" onclick="event.stopPropagation();delCT(\''+t.id+'\')">✕</button>':'';
-  return '<div class="tr'+(d?' dn':'')+'" onclick="togT(\''+t.id+'\')"><div class="ck'+(d?' on':'')+'"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="tb"><div class="tn">'+t.n+'</div>'+(t.nt?'<div class="tnt">'+t.nt+'</div>':'')+'<div class="tgs">'+tgs+'</div></div>'+dl+'</div>';
+  // Checkbox tıklanınca togT, gövdeye tıklanınca openTaskDetail
+  return '<div class="tr'+(d?' dn':'')+'">'+
+    '<div class="ck'+(d?' on':'')+'" onclick="event.stopPropagation();togT(\''+t.id+'\')"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>'+
+    '<div class="tb" onclick="openTaskDetail(\''+t.id+'\',\''+t.n.replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\',\''+( t.nt||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\')"><div class="tn">'+t.n+'</div>'+(t.nt?'<div class="tnt">'+t.nt+'</div>':'')+'<div class="tgs">'+tgs+'</div></div>'+
+    dl+'</div>';
 }
 function togG(id){document.getElementById('tl'+id)?.classList.toggle('op');document.getElementById('gcv'+id)?.classList.toggle('op');}
+function openTaskDetail(tid,name,nt){
+  document.getElementById('td-title').textContent=name;
+  const ntEl=document.getElementById('td-nt');
+  if(nt){ntEl.textContent=nt;ntEl.style.display='block';}
+  else{ntEl.style.display='none';}
+  // Etiketleri göster
+  const f=gf(aid);
+  const allTasks=getGs(f).flatMap(g=>g.ts);
+  const task=allTasks.find(t=>t.id===tid);
+  const tagsEl=document.getElementById('td-tags');
+  if(task&&task.tg&&task.tg.length){
+    tagsEl.innerHTML=task.tg.map(tg=>'<span class="tg '+(TC[tg]||'')+'">'+(TL[tg]||tg)+'</span>').join('');
+    tagsEl.style.display='flex';
+  } else {
+    tagsEl.innerHTML='';tagsEl.style.display='none';
+  }
+  document.getElementById('m-td').classList.add('op');
+}
 async function togT(tid){
   if(ism){toast('Sadece görüntüleme','');return;}
   const f=gf(aid);const was=!!f.tasks[tid];
