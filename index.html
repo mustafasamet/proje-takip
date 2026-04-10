@@ -669,11 +669,13 @@ function gf(id){return firms.find(f=>f.id===id);}
 function slug(s){return s.toLowerCase().replace(/[ğ]/g,'g').replace(/[ü]/g,'u').replace(/[ş]/g,'s').replace(/[ı]/g,'i').replace(/[ö]/g,'o').replace(/[ç]/g,'c').replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');}
 function getGs(f){
   let gs=[];
+  // Önce şablon grupları
   (f.mods||[]).forEach(m=>{if(T[m])gs=gs.concat(T[m]);});
+  // Özel görev grupları en başa eklenir
   if((f.ct||[]).length){
     const bg={};
     f.ct.forEach(ct=>{const gid=ct.gid||'ct-gen';if(!bg[gid])bg[gid]={id:gid,lb:'Özel',c:'#A07DD0',bg:'rgba(160,125,208,.15)',ti:ct.gti||'Özel Görevler',ts:[],isC:true};const ctTags=['ozel',...(ct.tags||[])];bg[gid].ts.push({id:ct.id,n:ct.n,nt:ct.nt||'',tg:ctTags,isC:true});});
-    Object.values(bg).forEach(g=>gs.push(g));
+    Object.values(bg).reverse().forEach(g=>gs.unshift(g));
   }
   return gs;
 }
@@ -836,9 +838,15 @@ function renderGs(f){
   const w=document.getElementById('gw');w.innerHTML='';
   let gs=getGs(f);
   if(fm!=='all'){if(fm==='oz')gs=gs.filter(g=>g.isC);else gs=gs.filter(g=>T[fm]?.some(x=>x.id===g.id));}
+  // "Özel Görev Ekle" butonu her zaman üstte göster
+  if(!ism){
+    const topBtn=document.createElement('div');
+    topBtn.style.cssText='display:flex;justify-content:flex-end;padding:0 0 10px';
+    topBtn.innerHTML='<button class="btn bgold bsm" onclick="openCT(\'ozel-genel\',\'Özel Görevler\')">+ Özel Görev Ekle</button>';
+    w.appendChild(topBtn);
+  }
   if(!gs.length){
-    const addBtn=!ism?'<button class="btn bgold bsm" style="margin-top:12px" onclick="openCT(\'ozel-genel\',\'Özel Görevler\')">+ Özel Görev Ekle</button>':'';
-    w.innerHTML='<div class="empty"><div class="eico">📋</div><div class="etit">Henüz görev yok</div><div>Şablon seçilmedi veya tüm görevler tamamlandı</div>'+addBtn+'</div>';
+    w.innerHTML+='<div class="empty"><div class="eico">📋</div><div class="etit">Henüz görev yok</div><div>Şablon seçilmedi veya tüm görevler tamamlandı</div></div>';
     return;
   }
   gs.forEach(grp=>{
@@ -877,11 +885,12 @@ async function togT(tid){
     }
   }
 }
-function openCT(gid,gti){pgid=gid;pgti=gti;document.getElementById('ct-lbl').textContent='"'+gti+'" grubuna özel görev ekle';document.getElementById('ct-n').value='';document.getElementById('ct-nt').value='';document.getElementById('m-ct').classList.add('op');setTimeout(()=>document.getElementById('ct-n').focus(),100);}
+function openCT(gid,gti){pgid=gid;pgti=gti;document.getElementById('ct-lbl').textContent='"'+gti+'" grubuna özel görev ekle';document.getElementById('ct-n').value='';document.getElementById('ct-nt').value='';resetCTTags();document.getElementById('m-ct').classList.add('op');setTimeout(()=>document.getElementById('ct-n').focus(),100);}
 function saveCT(){
   const n=document.getElementById('ct-n').value.trim();if(!n){toast('Görev adı girin','',true);return;}
   const f=gf(aid);if(!f.ct)f.ct=[];
-  f.ct.push({id:'ct'+Date.now(),gid:pgid,gti:pgti,n,nt:document.getElementById('ct-nt').value.trim()});
+  const tags=getCTSelectedTags();
+  f.ct.push({id:'ct'+Date.now(),gid:pgid,gti:pgti,n,nt:document.getElementById('ct-nt').value.trim(),tags});
   sv(f);closeM('m-ct');const ff=gf(aid);renderMT(ff);renderGs(ff);renderSt(ff);renderSB();toast('Görev eklendi',n);
 }
 function delCT(tid){if(!confirm('Bu görevi silmek istiyor musunuz?'))return;const f=gf(aid);f.ct=(f.ct||[]).filter(c=>c.id!==tid);delete f.tasks[tid];sv(f);renderGs(f);renderSt(f);renderSB();toast('Silindi','');}
