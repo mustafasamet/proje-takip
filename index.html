@@ -666,6 +666,7 @@ const TL={shopify:'Shopify',meta:'Meta',google:'Google',teknik:'Teknik',kritik:'
 let firms=[];
 let settings={whUrl:''};
 let aid=null,fm='all',ftg='hepsi',pgid=null,pgti='',sm=new Set(),ism=false;
+let accState={}; // { firmId: Set<closedGroupId> }
 async function sv(f){
   if(!f)return;
   const idx2=firms.findIndex(x=>x.id===f.id);
@@ -843,9 +844,7 @@ function renderSt(f){
   document.getElementById('scr').textContent=kd+'/'+kr.length+' kritik';document.getElementById('pf').style.width=p.pct+'%';
 }
 function renderGs(f){
-  // Render öncesi kapalı grupları kaydet
-  const closed=new Set();
-  document.querySelectorAll('[id^="tl"]').forEach(el=>{if(!el.classList.contains('op'))closed.add(el.id.slice(2));});
+  const closed=accState[f.id]||new Set();
   const w=document.getElementById('gw');w.innerHTML='';
   let gs=getGs(f);
   if(fm!=='all'){if(fm==='oz')gs=gs.filter(g=>g.isC);else gs=gs.filter(g=>T[fm]?.some(x=>x.id===g.id));}
@@ -886,7 +885,16 @@ function tH(t,f){
     '<div class="tb" onclick="openTaskDetail(\''+t.id+'\',\''+t.n.replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\',\''+( t.nt||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')+'\')"><div class="tn">'+t.n+'</div>'+(t.nt?'<div class="tnt">'+t.nt+'</div>':'')+'<div class="tgs">'+tgs+'</div></div>'+
     dl+'</div>';
 }
-function togG(id){document.getElementById('tl'+id)?.classList.toggle('op');document.getElementById('gcv'+id)?.classList.toggle('op');}
+function togG(id){
+  document.getElementById('tl'+id)?.classList.toggle('op');
+  document.getElementById('gcv'+id)?.classList.toggle('op');
+  // Durumu firmaya göre kaydet
+  if(aid){
+    if(!accState[aid])accState[aid]=new Set();
+    const isOpen=document.getElementById('tl'+id)?.classList.contains('op');
+    if(isOpen)accState[aid].delete(id);else accState[aid].add(id);
+  }
+}
 function openTaskDetail(tid,name,nt){
   document.getElementById('td-title').textContent=name;
   const ntEl=document.getElementById('td-nt');
