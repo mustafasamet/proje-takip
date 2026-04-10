@@ -843,6 +843,9 @@ function renderSt(f){
   document.getElementById('scr').textContent=kd+'/'+kr.length+' kritik';document.getElementById('pf').style.width=p.pct+'%';
 }
 function renderGs(f){
+  // Render öncesi kapalı grupları kaydet
+  const closed=new Set();
+  document.querySelectorAll('[id^="tl"]').forEach(el=>{if(!el.classList.contains('op'))closed.add(el.id.slice(2));});
   const w=document.getElementById('gw');w.innerHTML='';
   let gs=getGs(f);
   if(fm!=='all'){if(fm==='oz')gs=gs.filter(g=>g.isC);else gs=gs.filter(g=>T[fm]?.some(x=>x.id===g.id));}
@@ -866,6 +869,11 @@ function renderGs(f){
     const ab=!ism?'<button class="btn bgh bsm" style="font-size:10px;padding:2px 8px;margin-left:4px" onclick="event.stopPropagation();openCT(\''+grp.id+'\',\''+grp.ti.replace(/'/g,"\\'")+'\')" >+ Görev</button>':'';
     el.innerHTML='<div class="gh" onclick="togG(\''+grp.id+'\')"><span class="glb" style="background:'+grp.bg+';color:'+grp.c+'">'+grp.lb+'</span><span class="gico">'+mm.i+'</span><span class="gtit">'+grp.ti+'</span><span class="gmet">'+done+'/'+tasks.length+'</span>'+ab+'<span class="gcv op" id="gcv'+grp.id+'">▶</span></div><div class="gbar"><div class="gbf" style="width:'+pct+'%;background:'+grp.c+'"></div></div><div class="tl op" id="tl'+grp.id+'">'+tasks.map(t=>tH(t,f)).join('')+'</div>';
     w.appendChild(el);
+  });
+  // Kapalı durumu geri yükle
+  closed.forEach(id=>{
+    document.getElementById('tl'+id)?.classList.remove('op');
+    document.getElementById('gcv'+id)?.classList.remove('op');
   });
 }
 function tH(t,f){
@@ -903,14 +911,22 @@ async function togT(tid){
   // İlk görev tamamlandığında başlangıç zamanı kaydet
   if(!was&&!f.startedAt){f.startedAt=new Date().toISOString();}
   f.tasks[tid]=!was;sv(f);renderSt(f);renderGs(f);renderSB();
-  if(!was&&settings.whUrl){
+  if(!was){
     const task=getGs(f).flatMap(g=>g.ts).find(t=>t.id===tid);
     if(task){
-      const p=getProg(f);
-      if(p.done===p.total&&p.total>0){
-        await sendWH(f,task,'project_completed');
-      } else {
-        await sendWH(f,task,'task_completed');
+      // Tamamlanan görevi otomatik nota kaydet
+      let noteText='✅ Tamamlandı: '+task.n;
+      if(task.nt)noteText+='\n'+task.nt;
+      const n=await dbAddNote(f.id,noteText);
+      if(n){const notes=await dbLoadNotes(f.id);renderNotes(notes);}
+      // Webhook
+      if(settings.whUrl){
+        const p=getProg(f);
+        if(p.done===p.total&&p.total>0){
+          await sendWH(f,task,'project_completed');
+        } else {
+          await sendWH(f,task,'task_completed');
+        }
       }
     }
   }
