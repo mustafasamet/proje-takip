@@ -182,6 +182,25 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes tIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){.app{flex-direction:column}.sb{width:100%;height:auto;position:static}.stats{grid-template-columns:1fr 1fr}.topb{flex-direction:column}.mgrid{grid-template-columns:1fr}}
+/* Firma kodu */
+.firm-code-badge{display:inline-block;font-size:10px;color:var(--tx3);background:var(--d3);border:1px solid var(--bd2);border-radius:5px;padding:2px 8px;margin-left:8px;font-weight:700;letter-spacing:.8px;vertical-align:middle;position:relative;top:-3px}
+/* Link kartları (web / instagram) */
+.link-card{display:inline-flex;align-items:center;gap:6px;background:var(--d2);border:1px solid var(--bd2);border-radius:8px;padding:6px 11px;text-decoration:none;color:var(--tx);transition:all .15s;cursor:pointer}
+.link-card:hover{border-color:var(--gold);background:var(--d3)}
+.link-card-lbl{font-size:10px;color:var(--tx3);margin-bottom:1px}
+.link-card-val{font-size:12px;font-weight:500;color:var(--tx);max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Ticket */
+.ticket-item{padding:12px 14px;border-bottom:1px solid var(--bd)}
+.ticket-item:last-child{border-bottom:none}
+.ticket-ttl{font-size:13px;font-weight:600;color:var(--tx)}
+.ticket-desc{font-size:12px;color:var(--tx2);margin-top:3px;line-height:1.5;white-space:pre-wrap}
+.ticket-meta{font-size:10px;color:var(--tx3);margin-top:6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.t-badge{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+.t-open{background:rgba(255,183,0,.15);color:#FFB700}
+.t-closed{background:var(--grbg);color:var(--gr)}
+.tcls-btn{padding:2px 8px;border-radius:5px;border:none;background:var(--d4);color:var(--tx3);font-size:10px;cursor:pointer;transition:all .15s;margin-left:auto}
+.tcls-btn:hover{background:var(--grbg);color:var(--gr)}
+.ticket-form-section{background:var(--d3);border:1px solid var(--bd2);border-radius:12px;padding:16px;margin-bottom:16px}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -227,13 +246,15 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
       </div>
       <button class="formdata-btn" id="btn-notes" onclick="openNotes()" style="display:none">📝 Notlar</button>
       <button class="formdata-btn" id="btn-formdata" onclick="openFormData()" style="display:none">📋 Form Verileri</button>
+      <button class="formdata-btn" id="btn-tickets" onclick="openTickets()" style="display:none">🎫 Müşteri Talepleri</button>
+      <button class="formdata-btn" id="btn-strategy" onclick="sendStrategy()" style="display:none">🧠 Strateji Oluştur</button>
       <button class="btn bgh bsm" onclick="copyLink()">🔗 Müşteri Linki</button>
       <button class="btn bgh bsm" onclick="resetF()">↺ Sıfırla</button>
     </div>
   </div>
   <div id="infocards" class="infocards" style="display:none"></div>
   <div id="adids-row" class="adids-row" style="display:none"></div>
-  <div id="mban" class="mban" style="display:none"><span>👀</span><div id="mbantxt"></div></div>
+  <div id="mban" class="mban" style="display:none"><span>👀</span><div id="mbantxt" style="flex:1"></div><button class="btn bgold bsm" onclick="document.getElementById('m-ticket-form').classList.add('op')">📩 Destek Talebi Oluştur</button></div>
   <div id="stats" class="stats" style="display:none">
     <div class="sc"><div class="slbl">Toplam</div><div class="sval" id="st">—</div></div>
     <div class="sc"><div class="slbl">Tamamlanan</div><div class="sval vgr" id="sd">—</div></div>
@@ -313,9 +334,12 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
       <div class="mc" id="mc-oz" onclick="togM('oz')" style="grid-column:1/-1"><div class="mcic">✏️</div><div><div class="mctit">Boş Proje</div><div class="mcsub">Sadece özel görevler</div></div><div class="mcck" id="mck-oz"></div></div>
     </div>
   </div>
+  <div class="mf"><div class="ml">Firma Kodu</div><input class="mi" id="i-code" placeholder="Örn: BEE01" /></div>
   <div class="mf"><div class="ml">Yetkili İsim Soyisim</div><input class="mi" id="i-contact" placeholder="Ahmet Yılmaz" /></div>
   <div class="mf"><div class="ml">Telefon</div><input class="mi" id="i-phone" placeholder="0532 000 00 00" /></div>
   <div class="mf"><div class="ml">E-posta</div><input class="mi" id="i-email" placeholder="ahmet@firma.com" /></div>
+  <div class="mf"><div class="ml">Web Sitesi</div><input class="mi" id="i-website" placeholder="https://firma.com" /></div>
+  <div class="mf"><div class="ml">Instagram</div><input class="mi" id="i-instagram" placeholder="https://instagram.com/firma veya @firma" /></div>
   <div class="macts"><button class="btn bgh" onclick="closeM('m-add')">İptal</button><button class="btn bgold" onclick="addFirm()">Oluştur</button></div>
 </div></div>
 <div class="ov" id="m-settings">
@@ -335,6 +359,14 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
       n8n ekranında workflow açık ve <strong style="color:#f5a623">"Listen for test event"</strong> aktif olmalı. Üretim için <strong style="color:var(--gr)">/webhook/</strong> URL kullan, <strong style="color:var(--rd)">/webhook-test/</strong> değil.
     </div>
   </div>
+  </div>
+  <div class="mf" style="margin-top:14px">
+    <div class="ml">🧠 Strateji Oluşturma Webhook URL (n8n)</div>
+    <input class="mi" id="s-strategy-url" placeholder="https://n8n.example.com/webhook/strateji" />
+    <div style="font-size:11px;color:var(--tx3);margin-top:6px;line-height:1.6">
+      "Strateji Oluştur" butonuna basınca bu URL'e <code style="background:var(--d4);padding:1px 5px;border-radius:3px">firm_name, website, instagram, firm_id</code> gönderilir.
+    </div>
+  </div>
   <div class="macts">
     <button class="btn bgh" onclick="testWebhook()" style="margin-right:auto">🧪 Test Et</button>
     <button class="btn bgh" onclick="closeM('m-settings')">İptal</button>
@@ -346,9 +378,12 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
   <div class="mdtit">Firma Düzenle</div>
   <div class="mdsub" id="edit-firm-name"></div>
   <div class="mf"><div class="ml">Firma Adı</div><input class="mi" id="edit-name" placeholder="Firma adı" /></div>
+  <div class="mf"><div class="ml">Firma Kodu</div><input class="mi" id="edit-code" placeholder="Örn: BEE01" /></div>
   <div class="mf"><div class="ml">Yetkili İsim Soyisim</div><input class="mi" id="edit-contact" placeholder="Ahmet Yılmaz" /></div>
   <div class="mf"><div class="ml">Telefon</div><input class="mi" id="edit-phone" placeholder="0532 000 00 00" /></div>
   <div class="mf"><div class="ml">E-posta</div><input class="mi" id="edit-email" placeholder="ahmet@firma.com" /></div>
+  <div class="mf"><div class="ml">Web Sitesi</div><input class="mi" id="edit-website" placeholder="https://firma.com" /></div>
+  <div class="mf"><div class="ml">Instagram</div><input class="mi" id="edit-instagram" placeholder="https://instagram.com/firma veya @firma" /></div>
   <div class="mf">
     <div class="ml">Hizmet Modülleri</div>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Modül ekleyip çıkarabilirsiniz — mevcut görevler silinmez</div>
@@ -359,6 +394,28 @@ body{background:var(--dark);color:var(--tx);font-family:'Segoe UI',system-ui,san
     </div>
   </div>
   <div class="macts"><button class="btn bgh" onclick="closeM('m-edit')">İptal</button><button class="btn bgold" onclick="saveEdit()">Kaydet</button></div>
+</div></div>
+<!-- Admin: Müşteri Talepleri Modalı -->
+<div class="ov" id="m-tickets">
+<div class="md" style="max-width:540px">
+  <div class="mdtit">🎫 Müşteri Talepleri</div>
+  <div class="mdsub" id="tickets-firm-name"></div>
+  <div id="tickets-list" style="background:var(--d3);border:1px solid var(--bd2);border-radius:12px;min-height:60px;max-height:400px;overflow-y:auto;margin-bottom:8px">
+    <div style="text-align:center;padding:30px;color:var(--tx3);font-size:13px">Yükleniyor...</div>
+  </div>
+  <div class="macts"><button class="btn bgh" onclick="closeM('m-tickets')">Kapat</button></div>
+</div></div>
+<!-- Müşteri: Ticket Oluşturma Modalı -->
+<div class="ov" id="m-ticket-form">
+<div class="md" style="max-width:460px">
+  <div class="mdtit">📩 Destek Talebi Oluştur</div>
+  <div class="mdsub">Talebinizi yazın, ajansımız en kısa sürede dönüş yapar.</div>
+  <div class="mf"><div class="ml">Konu Başlığı</div><input class="mi" id="tk-title" placeholder="Örn: Logo değişikliği istiyorum" /></div>
+  <div class="mf"><div class="ml">Açıklama</div><textarea class="mi" id="tk-desc" rows="4" placeholder="Talebinizi detaylıca yazın..." style="resize:vertical"></textarea></div>
+  <div class="macts">
+    <button class="btn bgh" onclick="closeM('m-ticket-form')">İptal</button>
+    <button class="btn bgold" onclick="submitTicket()">Gönder</button>
+  </div>
 </div></div>
 <div class="ov" id="m-td">
 <div class="md" style="max-width:460px">
@@ -447,6 +504,27 @@ async function dbAddNote(firmId,text){
 async function dbDeleteNote(id){
   const {error}=await sb.from('firm_notes').delete().eq('id',id);
   if(error)console.error('not sil hatası:',error);
+}
+// ── TİCKET SİSTEMİ ─────────────────────────────────────────
+// Supabase'de bu tabloyu oluşturun:
+// CREATE TABLE firm_tickets (id BIGSERIAL PRIMARY KEY, firm_id TEXT NOT NULL, title TEXT NOT NULL, description TEXT, status TEXT DEFAULT 'open', created_at TIMESTAMPTZ DEFAULT NOW());
+async function dbAddTicket(firmId,title,description){
+  const {data,error}=await sb.from('firm_tickets').insert({firm_id:firmId,title,description,status:'open'}).select().single();
+  if(error){console.error('ticket ekle hatası:',error);return null;}
+  return data;
+}
+async function dbLoadTickets(firmId){
+  const {data,error}=await sb.from('firm_tickets').select('*').eq('firm_id',firmId).order('created_at',{ascending:false});
+  if(error){console.error('ticket yükle hatası:',error);return [];}
+  return data||[];
+}
+async function dbCloseTicket(id){
+  const {error}=await sb.from('firm_tickets').update({status:'closed'}).eq('id',id);
+  if(error)console.error('ticket kapat hatası:',error);
+}
+async function dbDeleteTicket(id){
+  const {error}=await sb.from('firm_tickets').delete().eq('id',id);
+  if(error)console.error('ticket sil hatası:',error);
 }
 // Reklam ID kaydet
 async function dbSaveAdIds(firmId,googleId,metaId){
@@ -770,12 +848,14 @@ function updateWHToggle(f){
 }
 function selF(id){
   aid=id;fm='all';ftg='hepsi';const f=gf(id);renderSB();
-  document.getElementById('pt').textContent=f.name;
+  document.getElementById('pt').innerHTML=f.name+(f.firmCode?'<span class="firm-code-badge">'+f.firmCode+'</span>':'');
   document.getElementById('ps').textContent=(f.mods||[]).map(m=>MM[m]?.l||m).join(' + ')||'Özel Proje';
   if(!ism){
     document.getElementById('ta').style.display='flex';
     document.getElementById('btn-notes').style.display='flex';
     document.getElementById('btn-formdata').style.display='flex';
+    document.getElementById('btn-tickets').style.display='flex';
+    document.getElementById('btn-strategy').style.display=settings.strategyWhUrl?'flex':'none';
     document.getElementById('adids-row').style.display='flex';
   }
   document.getElementById('stats').style.display='grid';
@@ -792,14 +872,24 @@ function renderInfoCards(f){
   if(f.contact)items.push({ico:'👤',lbl:'Yetkili',val:f.contact});
   if(f.phone)items.push({ico:'📞',lbl:'Telefon',val:f.phone});
   if(f.email)items.push({ico:'✉️',lbl:'E-posta',val:f.email});
-  if(!items.length){
-    el.style.display='flex';
+  el.style.display='flex';
+  let html=items.map(it=>`<div class="icard" onclick="copyInfo(this,'${it.val.replace(/'/g,"\\'")}')"><div><div class="icard-lbl">${it.ico} ${it.lbl}</div><div class="icard-val">${it.val}</div></div><span class="icard-ico">📋</span></div>`).join('');
+  // Web ve Instagram link kartları
+  if(f.website){
+    const href=f.website.startsWith('http')?f.website:'https://'+f.website;
+    const disp=f.website.replace(/^https?:\/\//,'').replace(/\/$/,'');
+    html+=`<a class="link-card" href="${href}" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><div><div class="link-card-lbl">Web Sitesi</div><div class="link-card-val">${disp}</div></div></a>`;
+  }
+  if(f.instagram){
+    const href=f.instagram.startsWith('http')?f.instagram:f.instagram.startsWith('@')?'https://instagram.com/'+f.instagram.slice(1):'https://instagram.com/'+f.instagram;
+    const disp=f.instagram.startsWith('@')?f.instagram:'@'+f.instagram.replace(/^https?:\/\/instagram\.com\//,'').replace(/\/$/,'');
+    html+=`<a class="link-card" href="${href}" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg><div><div class="link-card-lbl">Instagram</div><div class="link-card-val">${disp}</div></div></a>`;
+  }
+  if(!items.length&&!f.website&&!f.instagram){
     el.innerHTML='<button class="btn bgh bsm" onclick="openEdit()">✏️ İletişim Bilgisi Ekle</button>';
     return;
   }
-  el.style.display='flex';
-  el.innerHTML=items.map((it,i)=>`<div class="icard" onclick="copyInfo(this,'${it.val.replace(/'/g,"\\'")}')"><div><div class="icard-lbl">${it.ico} ${it.lbl}</div><div class="icard-val">${it.val}</div></div><span class="icard-ico">📋</span></div>`).join('')
-    +'<button class="btn bgh bsm" style="margin-left:4px;align-self:center" onclick="openEdit()">✏️ Düzenle</button>';
+  el.innerHTML=html+'<button class="btn bgh bsm" style="margin-left:4px;align-self:center" onclick="openEdit()">✏️ Düzenle</button>';
 }
 function copyInfo(el,val){
   navigator.clipboard.writeText(val).catch(()=>{});
@@ -965,9 +1055,12 @@ async function addFirm(){
   const mods=sm.has('oz')?[]:([...sm]);
   const id=slug(name)+'-'+Date.now();
   const newF={id,name,mods,tasks:{},ct:[],
+    firmCode:document.getElementById('i-code').value.trim(),
     contact:document.getElementById('i-contact').value.trim(),
     phone:document.getElementById('i-phone').value.trim(),
     email:document.getElementById('i-email').value.trim(),
+    website:document.getElementById('i-website').value.trim(),
+    instagram:document.getElementById('i-instagram').value.trim(),
     whEnabled:true,
     created:new Date().toISOString()};
   firms.push(newF);
@@ -1003,16 +1096,22 @@ async function testWebhook(){
 }
 function openSettings(){
   document.getElementById('s-wh-url').value=settings.whUrl||'';
+  document.getElementById('s-strategy-url').value=settings.strategyWhUrl||'';
   document.getElementById('m-settings').classList.add('op');
   setTimeout(()=>document.getElementById('s-wh-url').focus(),100);
 }
 function saveSettings(){
   settings.whUrl=document.getElementById('s-wh-url').value.trim();
+  settings.strategyWhUrl=document.getElementById('s-strategy-url').value.trim();
   svSettings();
   closeM('m-settings');
   updateWHStatus();
-  // Aktif firma varsa n8n banner güncelle
-  if(aid){const f=gf(aid);document.getElementById('nb').style.display=settings.whUrl?'flex':'none';}
+  // Aktif firma varsa n8n banner + strateji butonu güncelle
+  if(aid){
+    const f=gf(aid);
+    document.getElementById('nb').style.display=settings.whUrl?'flex':'none';
+    document.getElementById('btn-strategy').style.display=settings.strategyWhUrl?'flex':'none';
+  }
   toast('Ayarlar kaydedildi', settings.whUrl ? '✅ Webhook aktif' : 'Webhook URL girilmedi');
 }
 function updateWHStatus(){
@@ -1347,9 +1446,12 @@ function openEdit(){
   const f=gf(aid);if(!f)return;
   document.getElementById('edit-firm-name').textContent=f.name;
   document.getElementById('edit-name').value=f.name||'';
+  document.getElementById('edit-code').value=f.firmCode||'';
   document.getElementById('edit-contact').value=f.contact||'';
   document.getElementById('edit-phone').value=f.phone||'';
   document.getElementById('edit-email').value=f.email||'';
+  document.getElementById('edit-website').value=f.website||'';
+  document.getElementById('edit-instagram').value=f.instagram||'';
   // Mevcut modülleri işaretle
   ['sh','mt','gg'].forEach(m=>{
     const card=document.getElementById('emc-'+m);
@@ -1370,9 +1472,12 @@ async function saveEdit(){
   const newName=document.getElementById('edit-name').value.trim();
   if(!newName){toast('Firma adı boş olamaz','',true);return;}
   f.name=newName;
+  f.firmCode=document.getElementById('edit-code').value.trim();
   f.contact=document.getElementById('edit-contact').value.trim();
   f.phone=document.getElementById('edit-phone').value.trim();
   f.email=document.getElementById('edit-email').value.trim();
+  f.website=document.getElementById('edit-website').value.trim();
+  f.instagram=document.getElementById('edit-instagram').value.trim();
   // Modülleri güncelle
   const oldMods=f.mods||[];
   const newMods=['sh','mt','gg'].filter(m=>{
@@ -1381,7 +1486,7 @@ async function saveEdit(){
   });
   f.mods=newMods;
   await sv(f);closeM('m-edit');
-  document.getElementById('pt').textContent=f.name;
+  document.getElementById('pt').innerHTML=f.name+(f.firmCode?'<span class="firm-code-badge">'+f.firmCode+'</span>':'');
   document.getElementById('ps').textContent=newMods.map(m=>MM[m]?.l||m).join(' + ')||'Özel Proje';
   renderInfoCards(f);renderSB();renderMT(f);renderGs(f);renderSt(f);
   const added=newMods.filter(m=>!oldMods.includes(m));
@@ -1416,6 +1521,77 @@ async function delFirm(id){
 }
 function resetF(){if(!aid||!confirm('Tüm tamamlanan görevler sıfırlanacak. Emin misiniz?'))return;const f=gf(aid);f.tasks={};sv(f);renderSt(f);renderGs(f);renderSB();toast('Sıfırlandı','');}
 function copyLink(){if(!aid)return;const f=gf(aid);const url=location.origin+location.pathname+'?firma='+slug(f.name)+'&musteri=1';navigator.clipboard.writeText(url).catch(()=>{});toast('Müşteri linki kopyalandı!',url);}
+
+// ── TİCKET SİSTEMİ FONKSİYONLARI ────────────────────────────
+async function openTickets(){
+  const f=gf(aid);if(!f)return;
+  document.getElementById('tickets-firm-name').textContent=f.name+' — Müşteri Talepleri';
+  document.getElementById('m-tickets').classList.add('op');
+  await refreshTickets(f.id);
+}
+async function refreshTickets(firmId){
+  const list=document.getElementById('tickets-list');
+  list.innerHTML='<div style="text-align:center;padding:30px;color:var(--tx3);font-size:13px">Yükleniyor...</div>';
+  const tickets=await dbLoadTickets(firmId);
+  if(!tickets.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--tx3);font-size:13px">📭 Henüz müşteri talebi yok</div>';return;}
+  list.innerHTML=tickets.map(t=>{
+    const d=new Date(t.created_at).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    const isOpen=t.status==='open';
+    return `<div class="ticket-item">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          <div class="ticket-ttl">${t.title.replace(/</g,'&lt;')}</div>
+          ${t.description?`<div class="ticket-desc">${t.description.replace(/</g,'&lt;')}</div>`:''}
+        </div>
+        <span class="t-badge ${isOpen?'t-open':'t-closed'}">${isOpen?'Açık':'Çözüldü'}</span>
+      </div>
+      <div class="ticket-meta">
+        <span>📅 ${d}</span>
+        ${isOpen?`<button class="tcls-btn" onclick="closeTicket(${t.id},'${firmId}')">✓ Çözüldü işaretle</button>`:''}
+        <button class="tcls-btn" style="margin-left:${isOpen?'0':'auto'}" onclick="deleteTicket(${t.id},'${firmId}')">✕ Sil</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function closeTicket(id,firmId){
+  await dbCloseTicket(id);await refreshTickets(firmId);toast('Talep çözüldü olarak işaretlendi','');
+}
+async function deleteTicket(id,firmId){
+  if(!confirm('Bu talebi silmek istiyor musunuz?'))return;
+  await dbDeleteTicket(id);await refreshTickets(firmId);toast('Talep silindi','');
+}
+// Müşteri: ticket gönder
+async function submitTicket(){
+  const title=document.getElementById('tk-title').value.trim();
+  const desc=document.getElementById('tk-desc').value.trim();
+  if(!title){toast('Konu başlığı girin','',true);return;}
+  const f=gf(aid);if(!f)return;
+  const t=await dbAddTicket(f.id,title,desc);
+  if(t){
+    document.getElementById('tk-title').value='';
+    document.getElementById('tk-desc').value='';
+    closeM('m-ticket-form');
+    toast('Talebiniz iletildi','En kısa sürede dönüş yapacağız.');
+  } else {
+    toast('Hata oluştu','Lütfen tekrar deneyin.',true);
+  }
+}
+
+// ── STRATEJİ FONKSİYONU ────────────────────────────────────
+async function sendStrategy(){
+  const f=gf(aid);if(!f)return;
+  if(!settings.strategyWhUrl){toast('Strateji webhook URL ayarlanmadı','Ayarlar > Strateji URL girin.',true);return;}
+  if(!f.website&&!f.instagram){toast('Web sitesi veya Instagram bilgisi eksik','Firma düzenle ekranından ekleyin.',true);return;}
+  toast('Strateji oluşturuluyor...','n8n akışı başlatıldı, lütfen bekleyin');
+  try{
+    await fetch(settings.strategyWhUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({firm_id:f.id,firm_name:f.name,website:f.website||'',instagram:f.instagram||''})});
+    toast('✅ Strateji akışı başlatıldı','Drive\'a kaydedildiğinde hazır olacak');
+  }catch(e){
+    console.error('strategy webhook hatası:',e);
+    toast('Webhook bağlantı hatası','',true);
+  }
+}
+
 function closeM(id){document.getElementById(id).classList.remove('op');}
 document.querySelectorAll('.ov').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('op')}));
 function toast(title,msg,err){const w=document.getElementById('tw');const t=document.createElement('div');t.className='toast'+(err?' err':'');t.innerHTML='<div class="ttit">'+title+'</div>'+(msg?'<div>'+msg+'</div>':'');w.appendChild(t);setTimeout(()=>t.remove(),4000);}
@@ -1437,7 +1613,13 @@ async function init(){
 }
 
 // Sayfa açılınca session kontrolü
-if(checkSession()){
+// Müşteri linki (?musteri=1) varsa login atla — okuma modu şifre gerektirmez
+const _p=new URLSearchParams(location.search);
+if(_p.get('musteri')==='1'){
+  document.getElementById('loginpage').style.display='none';
+  document.getElementById('mainapp').style.display='flex';
+  init();
+} else if(checkSession()){
   document.getElementById('loginpage').style.display='none';
   document.getElementById('mainapp').style.display='flex';
   init();
