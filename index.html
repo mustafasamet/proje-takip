@@ -457,8 +457,10 @@ async function dbLoadFirms(){
   return data.map(r=>({
     id:r.id, name:r.name, mods:r.mods||[], tasks:r.tasks||{},
     ct:r.ct||[],
+    firmCode:r.firm_code||'',
     contact:r.contact||'', phone:r.phone||'',
     email:r.email||'', whEnabled:r.wh_enabled!==false,
+    website:r.website||'', instagram:r.instagram||'',
     googleAdsId:r.google_ads_id||'', metaAdsId:r.meta_ads_id||'',
     pinned:r.pinned||false,
     created:r.created_at, startedAt:r.started_at||null
@@ -471,9 +473,12 @@ async function dbSaveFirm(f){
     mods:f.mods||[],
     tasks:f.tasks||{},
     ct:f.ct||[],
+    firm_code:f.firmCode||'',
     contact:f.contact||'',
     phone:f.phone||'',
     email:f.email||'',
+    website:f.website||'',
+    instagram:f.instagram||'',
     wh_enabled:f.whEnabled!==false,
     pinned:f.pinned||false,
     google_ads_id:f.googleAdsId||'',
@@ -815,10 +820,11 @@ function renderSB(){
     var pinIco=f.pinned?'📌':'📍';
     var pinCls=f.pinned?' active':'';
     var pinTit=f.pinned?'Pinli':'Pinle';
-    var bellIco=openTicketFirms.has(f.id)?'<span class="ticket-bell" title="Bekleyen müşteri talebi var">🔔</span>':'';
+    var bellIco=openTicketFirms.has(f.id)?'<span class="ticket-bell" title="Bekleyen müşteri talebi var" style="font-size:12px;flex-shrink:0">🔔</span>':'';
     b.innerHTML=(
       '<div class="av">'+f.name[0].toUpperCase()+'</div>'+
-      '<div class="fi"><div class="fn">'+f.name+bellIco+'</div><div class="fm">'+mods+'</div></div>'+
+      '<div class="fi"><div class="fn">'+f.name+'</div><div class="fm">'+mods+'</div></div>'+
+      bellIco+
       activeDot+
       '<div class="fp">'+p.pct+'%</div>'+
       '<button class="pin-btn'+pinCls+'" data-fid="'+f.id+'" title="'+pinTit+'">'+pinIco+'</button>'+
